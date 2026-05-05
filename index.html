@@ -1048,66 +1048,86 @@ function storiesHTML() {
   </div>`;
 }
 
+let storyLang = 'en'; // 'en' or 'vi'
+
 function storyReadHTML(s) {
   return `
-  <div style="display:flex;flex-direction:column;min-height:100vh;background:var(--bg);padding:20px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-      <button id="btn-close-story" style="background:none;border:none;font-size:1.6rem;cursor:pointer;">←</button>
-      <span style="font-size:1rem;font-weight:900;color:var(--purple);">${s.level} · Story</span>
-    </div>
-    <div style="font-size:3rem;text-align:center;margin-bottom:12px;">${s.icon}</div>
-    <h2 style="font-size:1.5rem;font-weight:900;text-align:center;margin-bottom:20px;">${s.title}</h2>
-
-    <!-- Language Tab Switcher -->
-    <div style="display:flex;gap:8px;margin-bottom:16px;background:white;border-radius:16px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.07);">
-      <button onclick="switchStoryTab('de')" id="tab-de"
-        style="flex:1;border:none;border-radius:12px;padding:10px 6px;font-family:var(--font);font-size:.85rem;font-weight:900;cursor:pointer;background:var(--purple);color:white;transition:all .2s;">
-        🇩🇪 Deutsch
-      </button>
-      <button onclick="switchStoryTab('en')" id="tab-en"
-        style="flex:1;border:none;border-radius:12px;padding:10px 6px;font-family:var(--font);font-size:.85rem;font-weight:900;cursor:pointer;background:none;color:var(--dim);transition:all .2s;">
-        🇬🇧 English
-      </button>
-      <button onclick="switchStoryTab('vi')" id="tab-vi"
-        style="flex:1;border:none;border-radius:12px;padding:10px 6px;font-family:var(--font);font-size:.85rem;font-weight:900;cursor:pointer;background:none;color:var(--dim);transition:all .2s;">
-        🇻🇳 Việt
-      </button>
-    </div>
-
-    <!-- German Text -->
-    <div id="story-panel-de" style="background:white;border-radius:20px;padding:24px;box-shadow:0 4px 16px rgba(0,0,0,.06);border-left:4px solid #7C3AED;">
-      <div style="font-size:.72rem;font-weight:900;color:#7C3AED;margin-bottom:10px;">🇩🇪 AUF DEUTSCH</div>
-      <p style="font-size:.98rem;font-weight:700;line-height:2;color:var(--text);white-space:pre-line;">${s.text}</p>
-      <button onclick="speak(document.getElementById('story-german-text').innerText)"
-        style="margin-top:16px;background:#F3F0FF;border:none;border-radius:50%;width:48px;height:48px;font-size:1.4rem;cursor:pointer;">🔊</button>
-      <span id="story-german-text" style="display:none;">${s.text.replace(/`/g,"'")}</span>
+  <div style="display:flex;flex-direction:column;min-height:100vh;background:var(--bg);">
+    <!-- Sticky header -->
+    <div style="position:sticky;top:0;z-index:10;background:var(--bg);padding:16px 20px 10px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <button id="btn-close-story" style="background:none;border:none;font-size:1.5rem;cursor:pointer;line-height:1;">←</button>
+        <span style="font-size:2rem;">${s.icon}</span>
+        <div style="flex:1;">
+          <div style="font-size:.7rem;font-weight:900;color:var(--purple);text-transform:uppercase;">${s.level} · Story</div>
+          <div style="font-size:1rem;font-weight:900;color:var(--text);">${s.title}</div>
+        </div>
+      </div>
+      <!-- Mode switcher -->
+      <div style="display:flex;gap:6px;background:white;border-radius:14px;padding:5px;box-shadow:0 2px 8px rgba(0,0,0,.07);">
+        <button id="btn-lang-en" onclick="switchBilingual('en')"
+          style="flex:1;border:none;border-radius:10px;padding:9px 6px;font-family:var(--font);font-size:.8rem;font-weight:900;cursor:pointer;
+                 background:var(--purple);color:white;transition:all .2s;">
+          🇩🇪 + 🇬🇧 English
+        </button>
+        <button id="btn-lang-vi" onclick="switchBilingual('vi')"
+          style="flex:1;border:none;border-radius:10px;padding:9px 6px;font-family:var(--font);font-size:.8rem;font-weight:900;cursor:pointer;
+                 background:none;color:var(--dim);transition:all .2s;">
+          🇩🇪 + 🇻🇳 Tiếng Việt
+        </button>
+      </div>
     </div>
 
-    <!-- English Text -->
-    <div id="story-panel-en" style="display:none;background:#F0FDF4;border-radius:20px;padding:24px;box-shadow:0 4px 16px rgba(0,0,0,.06);border-left:4px solid #34D399;">
-      <div style="font-size:.72rem;font-weight:900;color:#34D399;margin-bottom:10px;">🇬🇧 IN ENGLISH</div>
-      <p style="font-size:.98rem;font-weight:700;line-height:2;color:var(--text);white-space:pre-line;">${s.english||'(No English translation yet)'}</p>
-    </div>
+    <!-- Two-block bilingual body -->
+    <div style="padding:12px 20px 48px;display:flex;flex-direction:column;gap:14px;">
 
-    <!-- Vietnamese Text -->
-    <div id="story-panel-vi" style="display:none;background:#FFF7ED;border-radius:20px;padding:24px;box-shadow:0 4px 16px rgba(0,0,0,.06);border-left:4px solid #F59E0B;">
-      <div style="font-size:.72rem;font-weight:900;color:#F59E0B;margin-bottom:10px;">🇻🇳 TIẾNG VIỆT</div>
-      <p style="font-size:.98rem;font-weight:700;line-height:2;color:var(--text);white-space:pre-line;">${s.vietnamese||'(Chưa có bản dịch tiếng Việt)'}</p>
+      <!-- German block — always shown -->
+      <div style="background:#F5F3FF;border-radius:20px;padding:22px 20px;border-left:4px solid #7C3AED;box-shadow:0 2px 10px rgba(124,58,237,.08);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span style="font-size:.7rem;font-weight:900;background:#EDE9FE;color:#7C3AED;padding:3px 10px;border-radius:20px;">🇩🇪 AUF DEUTSCH</span>
+          <button onclick="speak(\`${s.text.replace(/`/g,"'").replace(/\\/g,'\\\\')}\`)"
+            style="background:#EDE9FE;border:none;border-radius:50%;width:36px;height:36px;font-size:1.1rem;cursor:pointer;">🔊</button>
+        </div>
+        <p style="font-size:.97rem;font-weight:700;line-height:1.9;color:var(--text);white-space:pre-line;margin:0;">${s.text}</p>
+      </div>
+
+      <!-- Translation block — toggleable -->
+      <div id="bilingual-en" style="background:#F0FDF4;border-radius:20px;padding:22px 20px;border-left:4px solid #10B981;box-shadow:0 2px 10px rgba(16,185,129,.08);">
+        <div style="margin-bottom:12px;">
+          <span style="font-size:.7rem;font-weight:900;background:#D1FAE5;color:#059669;padding:3px 10px;border-radius:20px;">🇬🇧 ENGLISH TRANSLATION</span>
+        </div>
+        <p style="font-size:.97rem;font-weight:700;line-height:1.9;color:var(--text);white-space:pre-line;margin:0;">${s.english||'(No English translation yet)'}</p>
+      </div>
+
+      <div id="bilingual-vi" style="display:none;background:#FFF7ED;border-radius:20px;padding:22px 20px;border-left:4px solid #F59E0B;box-shadow:0 2px 10px rgba(245,158,11,.08);">
+        <div style="margin-bottom:12px;">
+          <span style="font-size:.7rem;font-weight:900;background:#FEF3C7;color:#D97706;padding:3px 10px;border-radius:20px;">🇻🇳 TIẾNG VIỆT</span>
+        </div>
+        <p style="font-size:.97rem;font-weight:700;line-height:1.9;color:var(--text);white-space:pre-line;margin:0;">${s.vietnamese||'(Chưa có bản dịch tiếng Việt)'}</p>
+      </div>
+
     </div>
   </div>`;
 }
 
-function switchStoryTab(lang) {
-  ['de','en','vi'].forEach(l => {
-    const panel = document.getElementById('story-panel-'+l);
-    const tab   = document.getElementById('tab-'+l);
-    if (!panel || !tab) return;
-    const isActive = l === lang;
-    panel.style.display = isActive ? 'block' : 'none';
-    tab.style.background = isActive ? 'var(--purple)' : 'none';
-    tab.style.color      = isActive ? 'white' : 'var(--dim)';
-  });
+function switchBilingual(lang) {
+  storyLang = lang;
+  const enDiv = document.getElementById('bilingual-en');
+  const viDiv = document.getElementById('bilingual-vi');
+  const btnEn = document.getElementById('btn-lang-en');
+  const btnVi = document.getElementById('btn-lang-vi');
+  if (!enDiv || !viDiv || !btnEn || !btnVi) return;
+
+  enDiv.style.display = lang === 'en' ? 'block' : 'none';
+  viDiv.style.display = lang === 'vi' ? 'block' : 'none';
+  btnEn.style.background = lang === 'en' ? 'var(--purple)' : 'none';
+  btnEn.style.color      = lang === 'en' ? 'white' : 'var(--dim)';
+  btnVi.style.background = lang === 'vi' ? 'var(--purple)' : 'none';
+  btnVi.style.color      = lang === 'vi' ? 'white' : 'var(--dim)';
 }
+
+// alias kept for legacy calls
+function switchStoryTab() {}
 
 
 function storiesHandlers() {
