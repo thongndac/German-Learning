@@ -25,6 +25,8 @@ const state = {
   stars:      parseInt(localStorage.getItem('stars'))  || 0,
   xp:         parseInt(localStorage.getItem('xp'))     || 0,
   level:      parseInt(localStorage.getItem('level'))  || 1,
+  streak:     parseInt(localStorage.getItem('streak')) || 0,
+  lastDay:    localStorage.getItem('lastDay') || '',
   completedLessons: JSON.parse(localStorage.getItem('completedLessons') || '[]'),
 };
 
@@ -33,15 +35,29 @@ function saveState() {
   localStorage.setItem('stars',             state.stars);
   localStorage.setItem('xp',               state.xp);
   localStorage.setItem('level',            state.level);
+  localStorage.setItem('streak',           state.streak);
+  localStorage.setItem('lastDay',          state.lastDay);
   localStorage.setItem('completedLessons', JSON.stringify(state.completedLessons));
 }
 
 function addStars(n) {
   state.stars += n;
-  state.xp    += n * 50;
+  state.xp    += n * 10;
   if (state.xp >= 500) { state.level++; state.xp -= 500; }
   saveState();
 }
+
+function updateStreak() {
+  const today = new Date().toDateString();
+  if (state.lastDay === today) return; // already counted today
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  state.streak = (state.lastDay === yesterday) ? state.streak + 1 : 1;
+  state.lastDay = today;
+  saveState();
+}
+// Check streak on load
+updateStreak();
+
 
 // ── AVATARS ────────────────────────────────────────────
 const AVATARS = [
@@ -182,9 +198,23 @@ function homeHTML() {
     </div>
     <div class="home-body">
       <div class="xp-card">
-        <div class="xp-card-trophy">🏆</div>
-        <div class="xp-card-title">Level ${state.level}</div>
-        <div class="xp-card-sub">This is your first step to greatness!</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div class="xp-card-trophy">🏆</div>
+            <div class="xp-card-title">Level ${state.level}</div>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <div style="text-align:center;background:rgba(255,255,255,.15);border-radius:16px;padding:8px 14px;">
+              <div style="font-size:1.3rem;">⭐</div>
+              <div style="font-size:.85rem;font-weight:900;">${state.stars}</div>
+            </div>
+            <div style="text-align:center;background:rgba(255,255,255,.15);border-radius:16px;padding:8px 14px;">
+              <div style="font-size:1.3rem;">🔥</div>
+              <div style="font-size:.85rem;font-weight:900;">${state.streak}d</div>
+            </div>
+          </div>
+        </div>
+        <div class="xp-card-sub">Keep it up — ${state.streak > 1 ? state.streak+'-day streak! 🔥' : 'Start your streak today!'}</div>
         <div class="xp-bar-track"><div class="xp-bar-fill" style="width:${xpPct}%"></div></div>
       </div>
       <p class="section-title">Categories</p>
@@ -234,9 +264,10 @@ function mapHTML() {
     const isDone   = done.includes('l'+l.id);
     const isActive = !isDone && (l.id===1 || done.includes('l'+(l.id-1)));
     const cls      = isDone?'done':isActive?'active':'locked';
-    return `<div class="map-node ${cls}" style="top:${l.top};left:${l.left};" data-id="l${l.id}">
+    const glow     = isDone ? 'box-shadow:0 0 18px 6px rgba(251,191,36,.55);' : isActive ? 'box-shadow:0 0 14px 4px rgba(52,211,153,.5);animation:pulseNode 1.4s ease-in-out infinite;' : 'opacity:.45;filter:grayscale(.8);';
+    return `<div class="map-node ${cls}" style="top:${l.top};left:${l.left};${glow}" data-id="l${l.id}">
       ${isActive?'<span class="map-node-flag">🚩</span>':''}
-      ${isDone?'⭐':l.id}
+      ${isDone?'⭐':isActive?l.id:'🔒'}
     </div>`;
   }).join('');
   return `
@@ -244,16 +275,15 @@ function mapHTML() {
     <div class="map-bg"></div>
     <div class="map-bg-overlay"></div>
     <div class="map-topbar">
-      <div class="map-stat coins">🪙 <span>${state.stars*10}</span></div>
-      <div class="map-stat stars">⭐ <span>${state.stars}</span></div>
+      <div class="map-stat coins">⭐ <span>${state.stars}</span></div>
+      <div class="map-stat stars">🔥 <span>${state.streak}d</span></div>
     </div>
     <div class="map-nodes" style="position:relative;min-height:calc(100vh - 160px);">${nodes}</div>
     <div class="map-bottombar">
       <button class="map-btn" id="map-home">🏠</button>
       <button class="map-btn" id="map-lessons">📚</button>
-      <button class="map-btn">⏱️</button>
-      <button class="map-btn">⚙️</button>
-      <button class="map-btn">✉️</button>
+      <button class="map-btn" onclick="navigate('games')">🎮</button>
+      <button class="map-btn" onclick="navigate('home')">⚙️</button>
     </div>
   </div>`;
 }
@@ -454,10 +484,12 @@ function handleAnswer(btn) {
   if (correct) {
     quizScore += 100;
     btn.style.background='#D1FAE5'; btn.style.borderColor='#10B981';
+    btn.classList.add('answer-correct');
     if (av) av.innerHTML=`<span style="font-size:3.5rem;display:inline-block;animation:bounce .6s infinite alternate;">🥳</span>`;
     setTimeout(nextQ, 900);
   } else {
     btn.style.background='#FEE2E2'; btn.style.borderColor='#EF4444';
+    btn.classList.add('answer-wrong');
     if (av) av.innerHTML=`<span style="font-size:3.5rem;display:inline-block;">😢</span>`;
     setTimeout(nextQ, 1600);
   }
@@ -466,61 +498,59 @@ function handleAnswer(btn) {
 function nextQ() {
   curQ++;
   if (curQ >= activeQuestions.length) {
-    if (currentLessonId) {
-      if (!state.completedLessons.includes(currentLessonId)) {
-        state.completedLessons.push(currentLessonId);
-        localStorage.setItem('completedLessons', JSON.stringify(state.completedLessons));
-      }
+    if (currentLessonId && !state.completedLessons.includes(currentLessonId)) {
+      state.completedLessons.push(currentLessonId);
+      localStorage.setItem('completedLessons', JSON.stringify(state.completedLessons));
     }
-    addStars(3);
+    addStars(10); // +10 stars per lesson
+    updateStreak();
     document.getElementById('main-content').innerHTML='';
-    showComplete(quizScore+100, 240, 3);
+    showReward(quizScore, activeQuestions.length * 100);
   } else { renderQ(); }
 }
 
-// ── COMPLETE POPUP ─────────────────────────────────────
-function showComplete(score, target, stars) {
+// ── REWARD POPUP (lightweight) ──────────────────────────
+function showReward(score, maxScore) {
+  const pct  = Math.round(score / Math.max(maxScore, 1) * 100);
+  const stars = pct >= 90 ? 3 : pct >= 60 ? 2 : 1;
+  // confetti
   const wrap = document.createElement('div');
   wrap.className = 'confetti-wrap';
   const cols=['#F472B6','#FBBF24','#34D399','#60A5FA','#A78BFA','#F87171'];
-  for(let i=0;i<60;i++){
+  for(let i=0;i<50;i++){
     const p=document.createElement('div');
     p.className='confetti-piece';
     p.style.cssText=`left:${Math.random()*100}%;background:${cols[~~(Math.random()*6)]};
-      width:${Math.random()*10+6}px;height:${Math.random()*10+6}px;
-      border-radius:${Math.random()>.5?'50%':'2px'};
-      animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*2}s;`;
+      width:${Math.random()*10+5}px;height:${Math.random()*10+5}px;
+      border-radius:${Math.random()>.5?'50%':'3px'};
+      animation-duration:${Math.random()*2+1.5}s;animation-delay:${Math.random()*1}s;`;
     wrap.appendChild(p);
   }
   document.body.appendChild(wrap);
-
-  const ov=document.createElement('div');
-  ov.className='complete-overlay';
-  ov.innerHTML=`
-    <div class="complete-card">
-      <div class="complete-stars">
-        <span class="complete-star" style="${stars<2?'filter:grayscale(1)':''}">⭐</span>
-        <span class="complete-star mid">⭐</span>
-        <span class="complete-star" style="${stars<3?'filter:grayscale(1)':''}">⭐</span>
-      </div>
-      <div class="complete-level">Level ${state.level}</div>
-      <div class="complete-banner">Complete!</div>
-      <div class="complete-stats">
-        Target: ${target.toLocaleString()} <span class="check">✔</span><br>
-        Your Score: <span class="score">${score.toLocaleString()}</span>
-      </div>
-      <div class="complete-actions">
-        <button class="complete-action-btn home" onclick="cleanup();navigate('home')" title="Home">🏠</button>
-        <button class="complete-action-btn next" onclick="cleanup();navigate('lesson-list')" title="Next">⏩</button>
-        <button class="complete-action-btn retry" onclick="cleanup();navigate('lesson')" title="Retry">🔄</button>
-      </div>
+  // overlay
+  const ov = document.createElement('div');
+  ov.className = 'reward-overlay';
+  ov.innerHTML = `
+    <div class="reward-card" id="reward-card">
+      <div class="reward-emoji">🎉</div>
+      <div class="reward-title">Great job!</div>
+      <div class="reward-stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+      <div class="reward-badge">+10 ⭐ earned!</div>
+      <div class="reward-streak">🔥 ${state.streak}-day streak!</div>
+      <div class="reward-score">Score: ${score} / ${maxScore}</div>
+      <button class="reward-btn" onclick="cleanupReward();navigate('map');">Continue →</button>
     </div>`;
   document.body.appendChild(ov);
+  setTimeout(() => { const c = document.getElementById('reward-card'); if(c) c.classList.add('reward-in'); }, 50);
 }
 
-function cleanup() {
-  document.querySelectorAll('.complete-overlay,.confetti-wrap').forEach(e=>e.remove());
+function cleanupReward() {
+  document.querySelectorAll('.reward-overlay,.confetti-wrap,.complete-overlay').forEach(e=>e.remove());
 }
+function cleanup() {
+  document.querySelectorAll('.complete-overlay,.confetti-wrap,.reward-overlay').forEach(e=>e.remove());
+}
+
 
 // ── STORIES ────────────────────────────────────────────
 // Add new stories: add an object to the STORIES array below
