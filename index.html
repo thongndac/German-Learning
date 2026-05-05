@@ -681,10 +681,12 @@ function cleanup() {
 // ── STORIES ────────────────────────────────────────────
 // Add new stories: add an object to the STORIES array below
 const STORIES = [
+
+  // ── A1 ──────────────────────────────────────────────
   {
     id:'s1', level:'A1', icon:'🐶', title:'Max und sein Hund',
     preview:'Max hat einen Hund. Der Hund heißt Bello...',
-    text: `Max hat einen Hund. Der Hund heißt Bello.
+    text:`Max hat einen Hund. Der Hund heißt Bello.
 Bello ist braun und sehr groß.
 Max und Bello spielen jeden Tag im Park.
 Bello liebt Bälle. Max wirft den Ball.
@@ -700,7 +702,7 @@ Bello runs fast and brings the ball back.
   {
     id:'s2', level:'A1', icon:'🍎', title:'Im Supermarkt',
     preview:'Anna geht mit ihrer Mutter in den Supermarkt...',
-    text: `Anna geht mit ihrer Mutter in den Supermarkt.
+    text:`Anna geht mit ihrer Mutter in den Supermarkt.
 Sie brauchen: Äpfel, Milch, Brot und Käse.
 Anna nimmt die Äpfel. Sie sind rot und frisch.
 Die Mutter nimmt die Milch und das Brot.
@@ -714,9 +716,59 @@ At the checkout the mother says: "Thank you!"
 The cashier says: "Goodbye!"`
   },
   {
+    id:'s4', level:'A1', icon:'🌈', title:'Die Farben des Regenbogens',
+    preview:'Lisa malt ein Bild. Sie hat viele Farben...',
+    text:`Lisa malt ein Bild. Sie hat viele Farben.
+Rot, Orange, Gelb, Grün, Blau, Lila.
+Das sind die Farben des Regenbogens.
+„Schau, Mama! Ein Regenbogen!", sagt Lisa.
+Die Mutter lächelt. „Sehr schön!", sagt sie.
+Lisa hängt das Bild an die Wand.`,
+    english:`Lisa is painting a picture. She has many colours.
+Red, orange, yellow, green, blue, purple.
+Those are the colours of the rainbow.
+"Look, Mum! A rainbow!", says Lisa.
+The mother smiles. "Very beautiful!", she says.
+Lisa hangs the picture on the wall.`
+  },
+  {
+    id:'s5', level:'A1', icon:'☀️', title:'Das Wetter heute',
+    preview:'Heute ist das Wetter sehr schön. Die Sonne scheint...',
+    text:`Heute ist das Wetter sehr schön. Die Sonne scheint.
+Es ist warm. Tom zieht ein T-Shirt an.
+Er geht mit seiner Schwester in den Park.
+Sie essen Eis. Das Eis ist kalt und lecker.
+Am Abend wird es windig.
+„Morgen regnet es", sagt der Vater.`,
+    english:`Today the weather is very nice. The sun is shining.
+It is warm. Tom puts on a T-shirt.
+He goes to the park with his sister.
+They eat ice cream. The ice cream is cold and delicious.
+In the evening it becomes windy.
+"Tomorrow it will rain", says the father.`
+  },
+  {
+    id:'s6', level:'A1', icon:'🐱', title:'Mia und ihre Katze',
+    preview:'Mia hat eine Katze. Die Katze heißt Luna...',
+    text:`Mia hat eine Katze. Die Katze heißt Luna.
+Luna ist weiß mit schwarzen Flecken.
+Sie schläft den ganzen Tag auf dem Sofa.
+Abends spielt Luna mit einem Ball.
+Mia gibt Luna Milch und Fisch.
+„Ich liebe dich, Luna!", sagt Mia.`,
+    english:`Mia has a cat. The cat is called Luna.
+Luna is white with black spots.
+She sleeps all day on the sofa.
+In the evenings Luna plays with a ball.
+Mia gives Luna milk and fish.
+"I love you, Luna!", says Mia.`
+  },
+
+  // ── A2 ──────────────────────────────────────────────
+  {
     id:'s3', level:'A2', icon:'🏫', title:'Ein Tag in der Schule',
     preview:'Tim geht um 7 Uhr in die Schule...',
-    text: `Tim geht um 7 Uhr in die Schule.
+    text:`Tim geht um 7 Uhr in die Schule.
 Sein Lieblingsfach ist Mathematik.
 Um 10 Uhr haben die Schüler eine Pause.
 Tim spielt mit seinen Freunden Fußball.
@@ -728,6 +780,154 @@ At 10 o'clock the students have a break.
 Tim plays football with his friends.
 After school, Tim does his homework.
 Then he plays on the computer.`
+  },
+  {
+    id:'s7', level:'A2', icon:'🍕', title:'Im Restaurant',
+    preview:'Familie Müller geht ins Restaurant. Es ist Samstagabend...',
+    text:`Familie Müller geht ins Restaurant. Es ist Samstagabend.
+Der Kellner bringt die Speisekarte.
+Der Vater bestellt ein Schnitzel mit Pommes.
+Die Mutter nimmt einen Salat und Wasser.
+Die Kinder essen Pizza. Sie ist sehr lecker!
+Am Ende sagt der Vater: „Die Rechnung, bitte."`,
+    english:`The Müller family goes to a restaurant. It is Saturday evening.
+The waiter brings the menu.
+The father orders a schnitzel with chips.
+The mother has a salad and water.
+The children eat pizza. It is very delicious!
+At the end the father says: "The bill, please."`
+  },
+  {
+    id:'s8', level:'A2', icon:'🚂', title:'Eine Reise mit dem Zug',
+    preview:'Lena und ihr Bruder fahren mit dem Zug nach Berlin...',
+    text:`Lena und ihr Bruder fahren mit dem Zug nach Berlin.
+Der Zug fährt um 9 Uhr ab.
+Sie kaufen Fahrkarten am Schalter.
+Im Zug lesen sie Bücher und hören Musik.
+Nach drei Stunden kommen sie in Berlin an.
+„Berlin ist so groß und schön!", sagt Lena.`,
+    english:`Lena and her brother travel to Berlin by train.
+The train departs at 9 o'clock.
+They buy tickets at the counter.
+On the train they read books and listen to music.
+After three hours they arrive in Berlin.
+"Berlin is so big and beautiful!", says Lena.`
+  },
+  {
+    id:'s9', level:'A2', icon:'🛒', title:'Einkaufen in der Stadt',
+    preview:'Samstags geht Julia gern einkaufen. Die Stadt ist voll...',
+    text:`Samstags geht Julia gern einkaufen. Die Stadt ist voll.
+Zuerst geht sie in eine Bäckerei. Sie kauft Brötchen.
+Dann geht sie in ein Kleidergeschäft.
+Eine rote Jacke gefällt ihr sehr gut.
+„Wie viel kostet die Jacke?", fragt Julia.
+„Fünfzig Euro", sagt die Verkäuferin. „Ich nehme sie!"`,
+    english:`On Saturdays Julia likes to go shopping. The city is busy.
+First she goes to a bakery. She buys bread rolls.
+Then she goes to a clothing shop.
+She really likes a red jacket.
+"How much does the jacket cost?", asks Julia.
+"Fifty euros", says the shop assistant. "I'll take it!"`
+  },
+  {
+    id:'s10', level:'A2', icon:'⚽', title:'Das Fußballspiel',
+    preview:'Jeden Samstag spielt Felix Fußball mit seinem Verein...',
+    text:`Jeden Samstag spielt Felix Fußball mit seinem Verein.
+Heute spielen sie gegen den Nachbarverein.
+Es ist ein schwieriges Spiel. Der Stand ist 1:1.
+In der letzten Minute schießt Felix ein Tor!
+Alle jubeln. „Wir haben gewonnen!", ruft Felix.
+Nach dem Spiel essen sie gemeinsam Pizza.`,
+    english:`Every Saturday Felix plays football with his club.
+Today they play against the neighbouring club.
+It is a difficult game. The score is 1:1.
+In the last minute Felix scores a goal!
+Everyone cheers. "We won!", shouts Felix.
+After the game they eat pizza together.`
+  },
+
+  // ── B1 ──────────────────────────────────────────────
+  {
+    id:'s11', level:'B1', icon:'🏢', title:'Das Vorstellungsgespräch',
+    preview:'Maria hat ein Vorstellungsgespräch bei einer großen Firma...',
+    text:`Maria hat ein Vorstellungsgespräch bei einer großen Firma.
+Sie ist nervös, aber gut vorbereitet.
+Der Chef fragt: „Warum möchten Sie bei uns arbeiten?"
+Maria antwortet ruhig und selbstbewusst.
+Sie erklärt ihre Erfahrungen und Fähigkeiten.
+Eine Woche später bekommt sie den Job. Sie ist überglücklich!`,
+    english:`Maria has a job interview at a large company.
+She is nervous but well prepared.
+The boss asks: "Why do you want to work for us?"
+Maria answers calmly and confidently.
+She explains her experience and skills.
+A week later she gets the job. She is overjoyed!`
+  },
+  {
+    id:'s12', level:'B1', icon:'🌍', title:'Ein Jahr im Ausland',
+    preview:'Jonas verbringt ein Jahr in Spanien als Austauschstudent...',
+    text:`Jonas verbringt ein Jahr in Spanien als Austauschstudent.
+Am Anfang ist es schwer: Er versteht kaum Spanisch.
+Aber er übt jeden Tag und macht neue Freunde.
+Nach drei Monaten kann er schon gut kommunizieren.
+Er entdeckt die spanische Küche und Kultur.
+Am Ende des Jahres will er gar nicht mehr nach Hause!`,
+    english:`Jonas spends a year in Spain as an exchange student.
+At first it is difficult: he barely understands Spanish.
+But he practises every day and makes new friends.
+After three months he can already communicate well.
+He discovers Spanish cuisine and culture.
+At the end of the year he doesn't want to go home at all!`
+  },
+
+  // ── B2 ──────────────────────────────────────────────
+  {
+    id:'s13', level:'B2', icon:'🤖', title:'Künstliche Intelligenz im Alltag',
+    preview:'Künstliche Intelligenz (KI) verändert unseren Alltag...',
+    text:`Künstliche Intelligenz (KI) verändert unseren Alltag grundlegend.
+Sprachassistenten helfen uns bei der Suche nach Informationen.
+Empfehlungsalgorithmen bestimmen, welche Filme wir sehen.
+In der Medizin unterstützt KI bei der Diagnose von Krankheiten.
+Doch es gibt auch Bedenken: Datenschutz und Arbeitsplatzverlust.
+Die Gesellschaft muss entscheiden, wie sie mit KI umgehen will.`,
+    english:`Artificial intelligence (AI) is fundamentally changing our everyday lives.
+Voice assistants help us search for information.
+Recommendation algorithms determine which films we watch.
+In medicine, AI assists with diagnosing diseases.
+But there are also concerns: data protection and job losses.
+Society must decide how it wants to handle AI.`
+  },
+  {
+    id:'s14', level:'B2', icon:'🌱', title:'Klimawandel und wir',
+    preview:'Der Klimawandel ist eine der größten Herausforderungen unserer Zeit...',
+    text:`Der Klimawandel ist eine der größten Herausforderungen unserer Zeit.
+Wissenschaftler warnen vor steigenden Temperaturen und Extremwetter.
+Viele Länder haben das Pariser Klimaabkommen unterzeichnet.
+Erneuerbare Energien wie Solar- und Windkraft gewinnen an Bedeutung.
+Jeder Einzelne kann durch bewusstes Handeln einen Beitrag leisten.
+Weniger Fleisch, mehr öffentliche Verkehrsmittel, Energie sparen — das hilft.`,
+    english:`Climate change is one of the greatest challenges of our time.
+Scientists warn of rising temperatures and extreme weather.
+Many countries have signed the Paris Climate Agreement.
+Renewable energies such as solar and wind power are gaining importance.
+Every individual can contribute through conscious actions.
+Less meat, more public transport, saving energy — that helps.`
+  },
+  {
+    id:'s15', level:'B2', icon:'📚', title:'Das Bildungssystem in Deutschland',
+    preview:'Das deutsche Bildungssystem ist in mehrere Stufen unterteilt...',
+    text:`Das deutsche Bildungssystem ist in mehrere Stufen unterteilt.
+Die Grundschule dauert vier Jahre, danach folgt die Sekundarstufe.
+Je nach Leistung besuchen Schüler Hauptschule, Realschule oder Gymnasium.
+Das Gymnasium endet mit dem Abitur, das zum Studium berechtigt.
+Deutschland hat viele renommierte Universitäten und Fachhochschulen.
+Bildung ist in Deutschland größtenteils kostenlos und für alle zugänglich.`,
+    english:`The German education system is divided into several stages.
+Primary school lasts four years, followed by secondary school.
+Depending on performance, pupils attend Hauptschule, Realschule or Gymnasium.
+The Gymnasium ends with the Abitur, which qualifies for university.
+Germany has many renowned universities and universities of applied sciences.
+Education in Germany is largely free and accessible to all.`
   },
 ];
 
