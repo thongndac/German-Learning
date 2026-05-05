@@ -1,0 +1,113 @@
+// B1 — Intermediate (6 lessons)
+window.LEVEL_B1 = {
+  id:'B1', name:'Intermediate', nameDE:'Mittelstufe', color:'#F472B6', shadow:'#BE185D', icon:'📗',
+  lessons:[
+    { id:'b1_l1', title:'Berufe', subtitle:'Professions', icon:'👷', unlocked:false, questions:[
+      {emoji:'👨‍⚕️',german:'Arzt / Ärztin',english:'Doctor',choices:['Arzt / Ärztin','Lehrer / Lehrerin','Ingenieur','Rechtsanwalt']},
+      {emoji:'👩‍🏫',german:'Lehrer / Lehrerin',english:'Teacher',choices:['Lehrer / Lehrerin','Arzt','Polizist','Bäcker']},
+      {emoji:'👨‍🍳',german:'Koch / Köchin',english:'Chef / Cook',choices:['Koch / Köchin','Kellner','Bäcker','Metzger']},
+      {emoji:'👮',german:'Polizist / Polizistin',english:'Police officer',choices:['Polizist / Polizistin','Feuerwehrmann','Soldat','Wachmann']},
+      {emoji:'✈️',german:'Pilot / Pilotin',english:'Pilot',choices:['Pilot / Pilotin','Kapitän','Steward','Ingenieur']},
+      {emoji:'⚖️',german:'Rechtsanwalt / -anwältin',english:'Lawyer',choices:['Rechtsanwalt / -anwältin','Richter','Notar','Staatsanwalt']},
+      {emoji:'🏗️',german:'Ingenieur / Ingenieurin',english:'Engineer',choices:['Ingenieur / Ingenieurin','Architekt','Techniker','Konstrukteur']},
+      {emoji:'💻',german:'Informatiker / Informatikerin',english:'Computer scientist',choices:['Informatiker / Informatikerin','Programmierer','Designer','Analyst']},
+    ]},
+    { id:'b1_l2', title:'Reisen', subtitle:'Travel', icon:'🧳', unlocked:false, questions:[
+      {emoji:'🧳',german:'Koffer',english:'Suitcase',choices:['Koffer','Rucksack','Tasche','Beutel']},
+      {emoji:'🗺️',german:'Reiseführer',english:'Travel guide',choices:['Reiseführer','Landkarte','Atlas','Kompass']},
+      {emoji:'🛂',german:'Pass / Reisepass',english:'Passport',choices:['Pass / Reisepass','Ausweis','Visum','Führerschein']},
+      {emoji:'🏨',german:'Zimmer reservieren',english:'To book a room',choices:['Zimmer reservieren','Zimmer bezahlen','Zimmer reinigen','Zimmer verlassen']},
+      {emoji:'🚢',german:'Kreuzfahrt',english:'Cruise',choices:['Kreuzfahrt','Segelfahrt','Fährfahrt','Bootsfahrt']},
+      {emoji:'🗺️',german:'Ich habe mich verirrt.',english:'I got lost.',choices:['Ich habe mich verirrt.','Ich bin angekommen.','Ich bin müde.','Ich habe Hunger.']},
+      {emoji:'💱',german:'Geldwechsel',english:'Currency exchange',choices:['Geldwechsel','Geldautomat','Überweisung','Konto']},
+      {emoji:'🌍',german:'Urlaub',english:'Holiday / Vacation',choices:['Urlaub','Ferien','Ausflug','Reise']},
+    ]},
+    { id:'b1_l3', title:'Kommunikation', subtitle:'Daily Communication', icon:'💬', unlocked:false, questions:[
+      {emoji:'📞',german:'Können Sie das bitte wiederholen?',english:'Can you repeat that please?',choices:['Können Sie das bitte wiederholen?','Was meinen Sie?','Ich verstehe nicht.','Sprechen Sie langsamer?']},
+      {emoji:'✉️',german:'Brief',english:'Letter',choices:['Brief','E-Mail','Nachricht','Fax']},
+      {emoji:'📱',german:'Handy',english:'Mobile phone',choices:['Handy','Telefon','Tablet','Laptop']},
+      {emoji:'🤝',german:'Vereinbarung',english:'Agreement / Appointment',choices:['Vereinbarung','Verabredung','Termin','Absprache']},
+      {emoji:'😕',german:'Ich verstehe das nicht.',english:'I don\'t understand that.',choices:['Ich verstehe das nicht.','Ich weiß das nicht.','Ich kenne das nicht.','Ich mag das nicht.']},
+      {emoji:'🗣️',german:'Darf ich kurz stören?',english:'May I briefly interrupt?',choices:['Darf ich kurz stören?','Darf ich fragen?','Darf ich helfen?','Darf ich gehen?']},
+      {emoji:'📋',german:'Formular',english:'Form',choices:['Formular','Antrag','Dokument','Akte']},
+      {emoji:'🖊️',german:'Unterschrift',english:'Signature',choices:['Unterschrift','Stempel','Name','Datum']},
+    ]},
+    { id:'b1_l4', title:'Natur & Umwelt', subtitle:'Nature & Environment', icon:'🌿', unlocked:false, questions:[
+      {emoji:'🌲',german:'Wald',english:'Forest',choices:['Wald','Park','Garten','Plantage']},
+      {emoji:'🏔️',german:'Berg',english:'Mountain',choices:['Berg','Hügel','Tal','Schlucht']},
+      {emoji:'🏖️',german:'Strand',english:'Beach',choices:['Strand','Küste','Ufer','Insel']},
+      {emoji:'🌊',german:'Meer',english:'Sea / Ocean',choices:['Meer','See','Fluss','Bach']},
+      {emoji:'🌿',german:'Umweltschutz',english:'Environmental protection',choices:['Umweltschutz','Naturschutz','Artenschutz','Klimaschutz']},
+      {emoji:'♻️',german:'Recycling',english:'Recycling',choices:['Recycling','Mülltrennung','Kompostierung','Wiederverwertung']},
+      {emoji:'🌡️',german:'Klimawandel',english:'Climate change',choices:['Klimawandel','Wetterveränderung','Erwärmung','Klimakrise']},
+      {emoji:'🌻',german:'Blume',english:'Flower',choices:['Blume','Pflanze','Baum','Strauch']},
+    ]},
+    { id:'b1_l5', title:'Medien', subtitle:'Media & Technology', icon:'📺', unlocked:false, questions:[
+      {emoji:'📺',german:'Fernsehen',english:'Television',choices:['Fernsehen','Radio','Kino','Zeitung']},
+      {emoji:'📰',german:'Zeitung',english:'Newspaper',choices:['Zeitung','Zeitschrift','Magazin','Buch']},
+      {emoji:'💻',german:'Internet',english:'Internet',choices:['Internet','Intranet','Netzwerk','Cloud']},
+      {emoji:'📷',german:'Fotografie',english:'Photography',choices:['Fotografie','Video','Film','Kunst']},
+      {emoji:'🎬',german:'Film',english:'Film / Movie',choices:['Film','Serie','Dokumentation','Kurzfilm']},
+      {emoji:'🎙️',german:'Podcast',english:'Podcast',choices:['Podcast','Sendung','Beitrag','Reportage']},
+      {emoji:'📱',german:'soziale Medien',english:'Social media',choices:['soziale Medien','digitale Medien','Online-Medien','Massenmedien']},
+      {emoji:'🔐',german:'Datenschutz',english:'Data protection',choices:['Datenschutz','Datensicherheit','Privatsphäre','Anonymität']},
+    ]},
+    { id:'b1_l6', title:'Arbeit', subtitle:'Work & Career', icon:'💼', unlocked:false, questions:[
+      {emoji:'💼',german:'Bewerbung',english:'Job application',choices:['Bewerbung','Einladung','Kündigung','Beförderung']},
+      {emoji:'📄',german:'Lebenslauf',english:'CV / Resume',choices:['Lebenslauf','Anschreiben','Zeugnis','Diplom']},
+      {emoji:'🤝',german:'Vorstellungsgespräch',english:'Job interview',choices:['Vorstellungsgespräch','Besprechung','Präsentation','Konferenz']},
+      {emoji:'💰',german:'Gehalt',english:'Salary',choices:['Gehalt','Lohn','Bonus','Provision']},
+      {emoji:'🏢',german:'Büro',english:'Office',choices:['Büro','Fabrik','Werkstatt','Labor']},
+      {emoji:'⏰',german:'Überstunden',english:'Overtime',choices:['Überstunden','Feierabend','Pause','Urlaub']},
+      {emoji:'📈',german:'Beförderung',english:'Promotion',choices:['Beförderung','Gehaltserhöhung','Versetzung','Kündigung']},
+      {emoji:'👥',german:'Kollege / Kollegin',english:'Colleague',choices:['Kollege / Kollegin','Chef / Chefin','Mitarbeiter','Vorgesetzte']},
+    ]},
+  ]
+};
+
+// B2 — Upper Intermediate (4 lessons)
+window.LEVEL_B2 = {
+  id:'B2', name:'Advanced', nameDE:'Fortgeschritten', color:'#A78BFA', shadow:'#7C3AED', icon:'📙',
+  lessons:[
+    { id:'b2_l1', title:'Grammatik: Kasus', subtitle:'German Cases', icon:'📝', unlocked:false, questions:[
+      {emoji:'📖',german:'Nominativ (der/die/das)',english:'Nominative – subject of the sentence',choices:['Nominativ (der/die/das)','Akkusativ (den)','Dativ (dem)','Genitiv (des)']},
+      {emoji:'📖',german:'Akkusativ (den)',english:'Accusative – direct object',choices:['Akkusativ (den)','Nominativ (der)','Dativ (dem)','Genitiv (des)']},
+      {emoji:'📖',german:'Dativ (dem/der)',english:'Dative – indirect object',choices:['Dativ (dem/der)','Akkusativ (den)','Nominativ (der)','Genitiv (des)']},
+      {emoji:'📖',german:'Genitiv (des/der)',english:'Genitive – possession',choices:['Genitiv (des/der)','Nominativ (der)','Akkusativ (den)','Dativ (dem)']},
+      {emoji:'🗣️',german:'Ich sehe den Mann.',english:'"den" = Akkusativ (masc.)',choices:['"den" = Akkusativ (masc.)','"dem" = Dativ (masc.)','"des" = Genitiv (masc.)','"der" = Nominativ (masc.)']},
+      {emoji:'🗣️',german:'Ich helfe dem Mann.',english:'"dem" = Dativ (masc.)',choices:['"dem" = Dativ (masc.)','"den" = Akkusativ (masc.)','"des" = Genitiv (masc.)','"der" = Nominativ (masc.)']},
+      {emoji:'📖',german:'Das ist das Buch des Mannes.',english:'"des" = Genitive possession',choices:['"des" = Genitive possession','"dem" = Dative indirect obj.','"den" = Accusative direct obj.','"der" = Nominative subject']},
+      {emoji:'📖',german:'Präposition + Dativ: mit, bei, von, nach, seit, aus, zu',english:'These prepositions always take Dative',choices:['mit, bei, von, nach, seit, aus, zu','durch, für, gegen, ohne, um','an, auf, hinter, in, neben','trotz, wegen, während, statt']},
+    ]},
+    { id:'b2_l2', title:'Modalverben', subtitle:'Modal Verbs', icon:'⚙️', unlocked:false, questions:[
+      {emoji:'✅',german:'können',english:'can / to be able to',choices:['können','wollen','müssen','dürfen']},
+      {emoji:'🚫',german:'dürfen',english:'may / to be allowed to',choices:['dürfen','können','müssen','wollen']},
+      {emoji:'⚠️',german:'müssen',english:'must / to have to',choices:['müssen','sollen','können','dürfen']},
+      {emoji:'💭',german:'wollen',english:'want to',choices:['wollen','mögen','wünschen','müssen']},
+      {emoji:'🙏',german:'sollen',english:'should / supposed to',choices:['sollen','dürfen','müssen','wollen']},
+      {emoji:'❤️',german:'mögen',english:'to like (something)',choices:['mögen','wollen','lieben','genießen']},
+      {emoji:'🤔',german:'Ich könnte helfen.',english:'"könnte" = Konjunktiv II of "können"',choices:['"könnte" = Konjunktiv II of "können"','"konnte" = Präteritum of "können"','"kann" = Präsens of "können"','"kannte" = Präteritum of "kennen"']},
+      {emoji:'📝',german:'Er muss arbeiten.',english:'"muss" = present of "müssen" (he must work)',choices:['"muss" = present of "müssen"','"musste" = past of "müssen"','"müsste" = Konjunktiv II','"musst" = 2nd person singular']},
+    ]},
+    { id:'b2_l3', title:'Passiv & Konjunktiv', subtitle:'Passive & Subjunctive', icon:'🔄', unlocked:false, questions:[
+      {emoji:'🔄',german:'Das Buch wird gelesen.',english:'The book is being read. (Passiv Präsens)',choices:['The book is being read.','The book was read.','The book will be read.','The book has been read.']},
+      {emoji:'🔄',german:'Das Buch wurde gelesen.',english:'The book was read. (Passiv Präteritum)',choices:['The book was read.','The book is read.','The book will be read.','The book had been read.']},
+      {emoji:'🔄',german:'Das Buch ist gelesen worden.',english:'The book has been read. (Passiv Perfekt)',choices:['The book has been read.','The book was read.','The book is read.','The book will have been read.']},
+      {emoji:'💭',german:'Wenn ich Zeit hätte, würde ich kommen.',english:'If I had time, I would come. (Konjunktiv II)',choices:['If I had time, I would come.','When I have time, I will come.','Because I had time, I came.','Although I have time, I won\'t come.']},
+      {emoji:'💭',german:'Ich würde gerne mitkommen.',english:'I would like to come along. (würde + Infinitiv)',choices:['I would like to come along.','I would have liked to come.','I will come along.','I came along gladly.']},
+      {emoji:'📰',german:'Er sagt, er sei krank.',english:'He says he is sick. (Konjunktiv I – reported speech)',choices:['He says he is sick.','He said he was sick.','He says he was sick.','He said he is sick.']},
+      {emoji:'🔄',german:'wird + Partizip II',english:'Formula for Passiv Präsens',choices:['Formula for Passiv Präsens','Formula for Passiv Perfekt','Formula for Futur I','Formula for Konjunktiv II']},
+      {emoji:'💭',german:'Als ob er es wüsste.',english:'As if he knew it. (Konjunktiv II)',choices:['As if he knew it.','Because he knows it.','Although he knew it.','If only he knew it.']},
+    ]},
+    { id:'b2_l4', title:'Deutsch im Alltag', subtitle:'German in Daily Life', icon:'🗣️', unlocked:false, questions:[
+      {emoji:'🗣️',german:'Das kommt darauf an.',english:'It depends.',choices:['It depends.','That\'s right.','That\'s fine.','Go ahead.']},
+      {emoji:'😤',german:'Das geht zu weit.',english:'That goes too far.',choices:['That goes too far.','That\'s too much.','That works.','That\'s fine with me.']},
+      {emoji:'🤷',german:'Das ist mir egal.',english:'I don\'t care. / It\'s all the same to me.',choices:['I don\'t care.','I agree.','I mind.','I care a lot.']},
+      {emoji:'👍',german:'Das klingt gut.',english:'That sounds good.',choices:['That sounds good.','That looks good.','That feels good.','That tastes good.']},
+      {emoji:'😮',german:'Das darf doch nicht wahr sein!',english:'That can\'t be true!',choices:['That can\'t be true!','That is definitely true!','I believe that!','So what?']},
+      {emoji:'🧐',german:'Inwiefern?',english:'In what way? / How so?',choices:['In what way?','Since when?','Why not?','What for?']},
+      {emoji:'💡',german:'Das macht Sinn.',english:'That makes sense.',choices:['That makes sense.','That is nonsense.','That is unclear.','That is strange.']},
+      {emoji:'🙌',german:'Herzlichen Glückwunsch!',english:'Congratulations!',choices:['Congratulations!','Happy Birthday!','Good luck!','Well done!']},
+    ]},
+  ]
+};
