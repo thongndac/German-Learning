@@ -1,0 +1,43 @@
+{
+  "name": "Deutsch für Kinder",
+  "short_name": "Deutsch",
+  "description": "Learn German through fun games and lessons — from A1 to B2!",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDE9FE",
+  "theme_color": "#7C3AED",
+  "lang": "en",
+  "categories": ["education", "kids", "language"],
+  "icons": [
+    {
+      "src": "img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Lessons",
+      "short_name": "Lessons",
+      "description": "Go straight to lessons",
+      "url": "./index.html#lesson-list",
+      "icons": [{ "src": "img/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Games",
+      "short_name": "Games",
+      "description": "Play mini-games",
+      "url": "./index.html#games",
+      "icons": [{ "src": "img/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

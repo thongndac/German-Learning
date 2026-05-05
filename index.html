@@ -4,9 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Deutsch für Kinder 🇩🇪</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#7C3AED">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Deutsch">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="img/icon-512.png">
+
+  <!-- SEO -->
+  <meta name="description" content="Learn German through fun games and lessons — A1 to B2. For kids and beginners.">
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Data & App scripts -->
   <script src="data/a1.js"></script>
   <script src="data/a2.js"></script>
   <script src="data/b1_b2.js"></script>
@@ -28,6 +46,7 @@ const state = {
   streak:     parseInt(localStorage.getItem('streak')) || 0,
   lastDay:    localStorage.getItem('lastDay') || '',
   completedLessons: JSON.parse(localStorage.getItem('completedLessons') || '[]'),
+  lessonScores:     JSON.parse(localStorage.getItem('lessonScores')     || '{}'),
 };
 
 function saveState() {
@@ -38,6 +57,7 @@ function saveState() {
   localStorage.setItem('streak',           state.streak);
   localStorage.setItem('lastDay',          state.lastDay);
   localStorage.setItem('completedLessons', JSON.stringify(state.completedLessons));
+  localStorage.setItem('lessonScores',     JSON.stringify(state.lessonScores));
 }
 
 function addStars(n) {
@@ -72,6 +92,23 @@ const AVATARS = [
 function getEmoji() {
   const a = AVATARS.find(x => x.id === state.avatarType);
   return a ? a.emoji : '😊';
+}
+
+// ── SCORE HELPERS ──────────────────────────────────────
+function scoreStars(pct) {
+  if (pct >= 90) return '⭐⭐⭐';
+  if (pct >= 60) return '⭐⭐';
+  if (pct >  0)  return '⭐';
+  return '';
+}
+function scoreColor(pct) {
+  if (pct >= 90) return '#10B981';
+  if (pct >= 60) return '#FBBF24';
+  return '#F87171';
+}
+function getAllLessons() {
+  const data = window.LESSON_DATA || { levels: [] };
+  return data.levels.flatMap(l => l.lessons);
 }
 
 // ── ROUTER ─────────────────────────────────────────────
@@ -217,6 +254,23 @@ function homeHTML() {
         <div class="xp-card-sub">Keep it up — ${state.streak > 1 ? state.streak+'-day streak! 🔥' : 'Start your streak today!'}</div>
         <div class="xp-bar-track"><div class="xp-bar-fill" style="width:${xpPct}%"></div></div>
       </div>
+      ${(()=>{
+        const all = getAllLessons();
+        const done = all.filter(l => state.completedLessons.includes(l.id));
+        const scores = done.map(l => (state.lessonScores[l.id]||{best:0}).best);
+        const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+        const weak = done.filter(l => (state.lessonScores[l.id]||{best:100}).best < 70);
+        if (!done.length) return '';
+        return `<div style="background:white;border-radius:20px;padding:16px 20px;margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,.06);">
+          <div style="font-weight:900;font-size:.9rem;color:var(--text);margin-bottom:10px;">📊 Your Progress</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+            <div><div style="font-size:1.4rem;font-weight:900;color:var(--purple);">${done.length}</div><div style="font-size:.7rem;color:var(--dim);font-weight:700;">Lessons done</div></div>
+            <div><div style="font-size:1.4rem;font-weight:900;color:#10B981;">${avg}%</div><div style="font-size:.7rem;color:var(--dim);font-weight:700;">Avg score</div></div>
+            <div><div style="font-size:1.4rem;font-weight:900;color:#F59E0B;">${state.stars}</div><div style="font-size:.7rem;color:var(--dim);font-weight:700;">Stars earned</div></div>
+          </div>
+          ${weak.length ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid #F0EDFF;font-size:.8rem;font-weight:800;color:#F87171;">⚠️ Needs review: ${weak.slice(0,2).map(l=>l.title).join(', ')}${weak.length>2?' +more':''}</div>` : '<div style="margin-top:8px;font-size:.8rem;font-weight:800;color:#10B981;">✅ All lessons looking great!</div>'}
+        </div>`;
+      })()}
       <p class="section-title">Categories</p>
       <div class="category-row">
         ${cats.map((c,i)=>`
@@ -297,9 +351,28 @@ function mapHandlers() {
 // ── LESSON LIST ────────────────────────────────────────
 let activeLevel = 'A1';
 
+// Returns true if a lesson should be unlocked
+function isLessonOpen(lessons, idx) {
+  const l = lessons[idx];
+  if (!l) return false;
+  if (state.completedLessons.includes(l.id)) return true; // already done
+  if (idx === 0) return true;                              // first lesson always open
+  return state.completedLessons.includes(lessons[idx - 1].id); // prev done → unlock
+}
+
+// Returns true if a level tab should be accessible
+function isLevelOpen(levelIdx, allLevels) {
+  if (levelIdx === 0) return true; // A1 always open
+  const prevLevel = allLevels[levelIdx - 1];
+  if (!prevLevel || !prevLevel.lessons.length) return false;
+  // unlock when at least 1 lesson of previous level is completed
+  return prevLevel.lessons.some(l => state.completedLessons.includes(l.id));
+}
+
 function lessonListHTML() {
-  const data = window.LESSON_DATA || { levels: [] };
-  const level = data.levels.find(l => l.id === activeLevel) || data.levels[0];
+  const data   = window.LESSON_DATA || { levels: [] };
+  const lvlIdx = data.levels.findIndex(l => l.id === activeLevel);
+  const level  = data.levels[lvlIdx] || data.levels[0];
   const lessons = level ? level.lessons : [];
 
   return `
@@ -312,31 +385,54 @@ function lessonListHTML() {
         <input type="text" placeholder="Search lessons..." />
       </div>
       <div class="filter-tabs">
-        ${data.levels.map(l => `
-          <button class="tab-pill${l.id === activeLevel ? ' active' : ''}" data-level="${l.id}"
-            style="${l.id === activeLevel ? 'background:'+l.color+';color:white;' : ''}">
-            ${l.icon} ${l.id}
-          </button>`).join('')}
+        ${data.levels.map((l, i) => {
+          const open = isLevelOpen(i, data.levels);
+          const doneCount = l.lessons.filter(ls => state.completedLessons.includes(ls.id)).length;
+          return `<button class="tab-pill${l.id === activeLevel ? ' active' : ''}${!open ? ' tab-locked' : ''}" data-level="${l.id}"
+            style="${l.id === activeLevel ? 'background:'+l.color+';color:white;' : ''}"
+            title="${!open ? 'Complete previous level to unlock' : l.name}">
+            ${open ? l.icon : '🔒'} ${l.id}
+            ${doneCount > 0 ? `<span style="font-size:.65rem;margin-left:3px;">${doneCount}/${l.lessons.length}</span>` : ''}
+          </button>`;
+        }).join('')}
       </div>
     </div>
     <div class="lesson-list">
-      ${lessons.map((l,i) => {
-        const done = state.completedLessons.includes(l.id);
-        const isOpen = l.unlocked || done;
+      ${lessons.map((l, i) => {
+        const done   = state.completedLessons.includes(l.id);
+        const open   = isLessonOpen(lessons, i);
+        const score  = state.lessonScores[l.id];
+        const bestPct = score ? score.best : 0;
+        const attempts = score ? score.attempts : 0;
+        const barColor = bestPct >= 90 ? '#10B981' : bestPct >= 60 ? '#FBBF24' : '#818CF8';
         return `
-        <div class="lesson-card" data-id="${l.id}" data-unlocked="${isOpen}">
-          <div>
-            <div class="lesson-card-label" style="color:${level.color}">${level.id} · ${l.subtitle}</div>
+        <div class="lesson-card${!open ? ' lesson-locked' : ''}" data-id="${l.id}" data-unlocked="${open}">
+          <div style="flex:1;">
+            <div class="lesson-card-label" style="color:${level.color}">${level.id} · Lesson ${i+1} · ${l.subtitle}</div>
             <div class="lesson-card-title">${l.icon} ${l.title}</div>
-            <div class="lesson-card-desc">${l.questions.length} questions${done ? ' · ✅ Done' : ''}</div>
+            <div class="lesson-card-desc">${l.questions.length} questions
+              ${done ? ' · ✅ Completed' : ''}
+              ${attempts > 0 ? ` · ${attempts} attempt${attempts>1?'s':''}` : ''}
+            </div>
+            ${bestPct > 0 ? `
+            <div style="margin-top:8px;">
+              <div style="display:flex;justify-content:space-between;font-size:.72rem;font-weight:800;color:${barColor};margin-bottom:3px;">
+                <span>Best score</span><span>${bestPct}%</span>
+              </div>
+              <div style="height:6px;background:#F0EDFF;border-radius:3px;overflow:hidden;">
+                <div style="height:100%;width:${bestPct}%;background:${barColor};border-radius:3px;transition:width .6s;"></div>
+              </div>
+            </div>` : ''}
           </div>
-          <div class="lesson-card-badge" style="background:${done?level.color:'#1E1B4B'}">
-            ${done ? '⭐' : `0/${l.questions.length}`}
-          </div>
-          <div class="lesson-card-footer">
-            ${isOpen
-              ? `<button class="btn-lesson-action start" data-id="${l.id}" style="background:${level.color}">▶ ${done?'Review':'Start'}</button>`
-              : `<button class="btn-lesson-action locked">🔒 Unlock</button>`}
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+            <div class="lesson-card-badge" style="background:${done ? level.color : open ? '#E9E5FF' : '#CBD5E1'};color:${done ? 'white' : open ? level.color : '#94A3B8'}">
+              ${done ? '⭐' : open ? `${i+1}` : '🔒'}
+            </div>
+            <div class="lesson-card-footer">
+              ${open
+                ? `<button class="btn-lesson-action start" data-id="${l.id}" style="background:${level.color}">▶ ${done?'Review':'Start'}</button>`
+                : `<button class="btn-lesson-action locked" disabled>Locked</button>`}
+            </div>
           </div>
         </div>`;
       }).join('')}
@@ -389,37 +485,42 @@ function startLesson() {
   renderQ();
 }
 
+let wrongAnswers = []; // track wrong answers this session
+
 function renderQ() {
   const main = document.getElementById('main-content');
   const q    = activeQuestions[curQ];
   const pct  = Math.round((curQ/activeQuestions.length)*100);
+  const sessionPct = curQ > 0 ? Math.round(quizScore/(curQ*100)*100) : 100;
   const shuffled = [...q.choices].sort(()=>Math.random()-.5);
   main.innerHTML = `
   <div style="display:flex;flex-direction:column;min-height:100vh;padding:20px;background:var(--bg);">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;">
-      <button onclick="navigate('lesson-list')" style="background:none;border:none;font-size:1.6rem;cursor:pointer;">✖️</button>
-      <div style="flex:1;height:14px;background:#E9E5FF;border-radius:7px;overflow:hidden;">
-        <div style="height:100%;background:var(--purple);width:${pct}%;border-radius:7px;transition:width .5s;"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <button onclick="navigate('lesson-list')" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">✖️</button>
+      <div style="flex:1;height:12px;background:#E9E5FF;border-radius:6px;overflow:hidden;">
+        <div style="height:100%;background:var(--purple);width:${pct}%;border-radius:6px;transition:width .5s;"></div>
       </div>
-      <div style="font-size:.85rem;font-weight:900;color:var(--purple);">${curQ}/${activeQuestions.length}</div>
+      <div style="font-size:.8rem;font-weight:900;color:var(--purple);white-space:nowrap;">${curQ}/${activeQuestions.length}</div>
+      <div style="font-size:.8rem;font-weight:900;background:#FEF3C7;color:#92400E;padding:4px 10px;border-radius:20px;white-space:nowrap;">⭐ ${sessionPct}%</div>
     </div>
-    <div style="background:white;border-radius:28px;padding:36px 24px;text-align:center;box-shadow:0 8px 32px rgba(124,58,237,.12);margin-bottom:28px;border:2px solid #EDE9FE;">
-      <div style="font-size:5rem;margin-bottom:16px;">${q.emoji}</div>
-      <h2 style="font-size:2.4rem;font-weight:900;color:var(--purple);margin-bottom:8px;">${q.german}</h2>
-      <div style="font-size:1.1rem;color:var(--dim);font-weight:700;">${q.english || q.viet || ''}</div>
-      <button onclick="speak('${q.german}')" style="margin-top:20px;background:#F3F0FF;border:none;border-radius:50%;width:60px;height:60px;font-size:1.6rem;cursor:pointer;">🔊</button>
+    <div style="background:white;border-radius:28px;padding:32px 24px;text-align:center;box-shadow:0 8px 32px rgba(124,58,237,.12);margin-bottom:24px;border:2px solid #EDE9FE;">
+      <div style="font-size:4.5rem;margin-bottom:12px;">${q.emoji}</div>
+      <h2 style="font-size:2.2rem;font-weight:900;color:var(--purple);margin-bottom:6px;">${q.german}</h2>
+      <div style="font-size:1rem;color:var(--dim);font-weight:700;">${q.english || ''}</div>
+      <button onclick="speak('${q.german.replace(/'/g,"\\'")}')"
+        style="margin-top:16px;background:#F3F0FF;border:none;border-radius:50%;width:54px;height:54px;font-size:1.5rem;cursor:pointer;">🔊</button>
     </div>
-    <p style="text-align:center;font-weight:800;color:var(--dim);margin-bottom:16px;">Pick the correct answer:</p>
+    <p style="text-align:center;font-weight:800;color:var(--dim);margin-bottom:14px;">Pick the correct answer:</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="choices">
       ${shuffled.map(c=>`
-        <button class="choice-btn" data-correct="${c===q.german}"
+        <button class="choice-btn" data-correct="${c===q.german}" data-word="${q.german}"
           onclick="handleAnswer(this)"
-          style="background:white;border:3px solid #E9E5FF;border-radius:20px;padding:18px 12px;
-                 font-family:var(--font);font-size:1.05rem;font-weight:800;color:var(--text);
+          style="background:white;border:3px solid #E9E5FF;border-radius:20px;padding:16px 10px;
+                 font-family:var(--font);font-size:1rem;font-weight:800;color:var(--text);
                  cursor:pointer;box-shadow:0 4px 0 #E9E5FF;">${c}</button>`).join('')}
     </div>
-    <div style="text-align:center;margin-top:auto;padding-top:24px;" id="quiz-avatar">
-      <span style="font-size:3.5rem;display:inline-block;animation:breathe 3s ease-in-out infinite;">${getEmoji()}</span>
+    <div style="text-align:center;margin-top:auto;padding-top:20px;" id="quiz-avatar">
+      <span style="font-size:3.2rem;display:inline-block;animation:breathe 3s ease-in-out infinite;">${getEmoji()}</span>
     </div>
   </div>`;
 }
@@ -491,6 +592,9 @@ function handleAnswer(btn) {
     btn.style.background='#FEE2E2'; btn.style.borderColor='#EF4444';
     btn.classList.add('answer-wrong');
     if (av) av.innerHTML=`<span style="font-size:3.5rem;display:inline-block;">😢</span>`;
+    // Track wrong answers for review
+    const q = activeQuestions[curQ];
+    if (q && !wrongAnswers.find(w=>w.german===q.german)) wrongAnswers.push(q);
     setTimeout(nextQ, 1600);
   }
 }
@@ -498,19 +602,23 @@ function handleAnswer(btn) {
 function nextQ() {
   curQ++;
   if (curQ >= activeQuestions.length) {
-    if (currentLessonId && !state.completedLessons.includes(currentLessonId)) {
+    if (currentLessonId && !state.completedLessons.includes(currentLessonId))
       state.completedLessons.push(currentLessonId);
-      localStorage.setItem('completedLessons', JSON.stringify(state.completedLessons));
-    }
-    addStars(10); // +10 stars per lesson
+    const pct  = Math.round(quizScore / (activeQuestions.length * 100) * 100);
+    const prev = state.lessonScores[currentLessonId] || { best: 0, attempts: 0 };
+    const isNewBest = pct > prev.best;
+    state.lessonScores[currentLessonId] = { best: Math.max(prev.best, pct), attempts: prev.attempts + 1 };
+    addStars(10);
     updateStreak();
-    document.getElementById('main-content').innerHTML='';
-    showReward(quizScore, activeQuestions.length * 100);
+    saveState();
+    document.getElementById('main-content').innerHTML = '';
+    showReward(quizScore, activeQuestions.length * 100, isNewBest, [...wrongAnswers]);
+    wrongAnswers = [];
   } else { renderQ(); }
 }
 
-// ── REWARD POPUP (lightweight) ──────────────────────────
-function showReward(score, maxScore) {
+// ── REWARD POPUP ───────────────────────────────────────
+function showReward(score, maxScore, isNewBest, wrong) {
   const pct  = Math.round(score / Math.max(maxScore, 1) * 100);
   const stars = pct >= 90 ? 3 : pct >= 60 ? 2 : 1;
   // confetti
@@ -528,18 +636,36 @@ function showReward(score, maxScore) {
   }
   document.body.appendChild(wrap);
   // overlay
+  const wrongHTML = wrong && wrong.length ? `
+    <div style="margin:12px 0;padding:12px;background:#FEF2F2;border-radius:16px;text-align:left;">
+      <div style="font-size:.75rem;font-weight:900;color:#EF4444;margin-bottom:8px;">⚠️ Review these words:</div>
+      ${wrong.map(w=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:1.1rem;">${w.emoji}</span>
+        <span style="font-weight:800;color:#1E1B4B;">${w.german}</span>
+        <span style="color:#6B7280;font-size:.85rem;">= ${w.english}</span>
+        <button onclick="speak('${w.german.replace(/'/g,"\\'")}'); event.stopPropagation();" 
+          style="margin-left:auto;background:#F3F0FF;border:none;border-radius:50%;width:28px;height:28px;font-size:.85rem;cursor:pointer;">🔊</button>
+      </div>`).join('')}
+    </div>` : '';
   const ov = document.createElement('div');
   ov.className = 'reward-overlay';
   ov.innerHTML = `
     <div class="reward-card" id="reward-card">
-      <div class="reward-emoji">🎉</div>
-      <div class="reward-title">Great job!</div>
+      <div class="reward-emoji">${pct===100?'🏆':pct>=90?'🎉':pct>=60?'😊':'💪'}</div>
+      <div class="reward-title">${pct===100?'Perfect!':pct>=90?'Excellent!':pct>=60?'Great job!':'Keep going!'}</div>
       <div class="reward-stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
-      <div class="reward-badge">+10 ⭐ earned!</div>
+      ${isNewBest ? '<div style="background:linear-gradient(135deg,#34D399,#059669);color:white;font-weight:900;font-size:.85rem;padding:4px 16px;border-radius:20px;display:inline-block;margin-bottom:8px;animation:starPop .4s ease both;">🏅 New Best!</div>' : ''}
+      <div class="reward-badge">+10 ⭐ · ${pct}% score</div>
       <div class="reward-streak">🔥 ${state.streak}-day streak!</div>
-      <div class="reward-score">Score: ${score} / ${maxScore}</div>
-      <button class="reward-btn" onclick="cleanupReward();navigate('map');">Continue →</button>
+      ${wrongHTML}
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        ${wrong && wrong.length ? `<button class="reward-btn" style="flex:1;background:#F0EDFF;color:var(--purple);box-shadow:none;" 
+          onclick="cleanupReward();activeQuestions=[...wrongAnswers_saved];curQ=0;quizScore=0;wrongAnswers=[];renderQ();">Retry wrong</button>` : ''}
+        <button class="reward-btn" style="flex:2;" onclick="cleanupReward();navigate('lesson-list');">Continue →</button>
+      </div>
     </div>`;
+  // Save wrong answers for retry
+  window.wrongAnswers_saved = wrong || [];
   document.body.appendChild(ov);
   setTimeout(() => { const c = document.getElementById('reward-card'); if(c) c.classList.add('reward-in'); }, 50);
 }
@@ -785,6 +911,79 @@ function activitiesHandlers() {
 
 // ── BOOT ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => navigate('splash'));
+</script>
+
+<!-- ── PWA SERVICE WORKER ─────────────────────────────── -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('[SW] Registered:', reg.scope))
+      .catch(err => console.warn('[SW] Registration failed:', err));
+  });
+}
+
+// ── PWA INSTALL PROMPT ────────────────────────────────
+let _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredPrompt = e;
+  // Show install banner after 3s if not already installed
+  setTimeout(() => {
+    if (_deferredPrompt && !localStorage.getItem('pwa-dismissed')) {
+      showInstallBanner();
+    }
+  }, 3000);
+});
+
+window.addEventListener('appinstalled', () => {
+  _deferredPrompt = null;
+  const b = document.getElementById('install-banner');
+  if (b) b.remove();
+  console.log('[PWA] App installed!');
+});
+
+function showInstallBanner() {
+  if (document.getElementById('install-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'install-banner';
+  banner.innerHTML = `
+    <div style="position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+      background:white;border-radius:20px;padding:14px 20px;
+      box-shadow:0 8px 32px rgba(0,0,0,.18);
+      display:flex;align-items:center;gap:12px;z-index:300;
+      max-width:360px;width:90%;animation:popIn .3s ease;">
+      <img src="img/icon-192.png" style="width:44px;height:44px;border-radius:12px;">
+      <div style="flex:1;">
+        <div style="font-weight:900;font-size:.9rem;color:#1E1B4B;">Install App 📲</div>
+        <div style="font-size:.75rem;color:#6B7280;font-weight:700;">Learn offline, anytime!</div>
+      </div>
+      <button onclick="installPWA()" 
+        style="background:#7C3AED;color:white;border:none;border-radius:12px;
+               padding:8px 16px;font-family:var(--font);font-weight:900;
+               font-size:.85rem;cursor:pointer;">Install</button>
+      <button onclick="dismissInstall()" 
+        style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#9CA3AF;">✕</button>
+    </div>`;
+  document.body.appendChild(banner);
+}
+
+function installPWA() {
+  if (!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(result => {
+    if (result.outcome === 'accepted') console.log('[PWA] User accepted install');
+    _deferredPrompt = null;
+    const b = document.getElementById('install-banner');
+    if (b) b.remove();
+  });
+}
+
+function dismissInstall() {
+  localStorage.setItem('pwa-dismissed', '1');
+  const b = document.getElementById('install-banner');
+  if (b) b.style.animation = 'none', b.style.opacity = '0', setTimeout(() => b.remove(), 300);
+}
 </script>
 </body>
 </html>
