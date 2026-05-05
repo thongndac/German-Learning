@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Clear Cache Fix</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; text-align: center; background: #F3F0FF; color: #4C1D95; }
+    button { background: #7C3AED; color: white; border: none; padding: 16px 32px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Xóa Bộ Nhớ Đệm (Clear Cache)</h1>
+  <p>Nhấn nút bên dưới để ép trình duyệt xóa sạch bộ nhớ tạm của app. Sau đó app sẽ tải lại bản mới nhất.</p>
+  <button onclick="nukeCache()">Xóa Cache & Sửa Lỗi</button>
+  <h2 id="status" style="margin-top:20px; color: #10B981;"></h2>
+
+  <script>
+    async function nukeCache() {
+      let status = document.getElementById('status');
+      try {
+        // Unregister all Service Workers
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (let reg of registrations) {
+            await reg.unregister();
+            console.log('Unregistered SW:', reg);
+          }
+        }
+        
+        // Delete all Cache Storage
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          for (let key of keys) {
+            await caches.delete(key);
+            console.log('Deleted cache:', key);
+          }
+        }
+
+        // Clear localStorage
+        localStorage.removeItem('pwa-dismissed');
+        // Do not clear lesson progress! Only SW stuff.
+
+        status.innerHTML = "✅ ĐÃ XÓA CACHE THÀNH CÔNG!<br><br><small>Hãy đóng tab này và mở lại link App của bạn.</small>";
+      } catch(e) {
+        status.innerHTML = "❌ Lỗi: " + e.message;
+      }
+    }
+  </script>
+</body>
+</html>
