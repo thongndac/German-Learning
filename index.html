@@ -391,12 +391,55 @@ function renderQ() {
   </div>`;
 }
 
-function speak(word) {
-  if ('speechSynthesis' in window) {
-    const u = new SpeechSynthesisUtterance(word);
-    u.lang = 'de-DE'; speechSynthesis.speak(u);
+// ── SPEECH SYNTHESIS ───────────────────────────────────
+// Preferred German voices (in order of quality)
+const PREFERRED_VOICES = [
+  'Google Deutsch',
+  'Microsoft Hedda',
+  'Microsoft Stefan',
+  'Anna',           // macOS German
+  'Markus',         // macOS German (male)
+  'Yannick',        // macOS
+];
+
+let _cachedVoice = null;
+
+function getBestGermanVoice() {
+  if (_cachedVoice) return _cachedVoice;
+  const voices = speechSynthesis.getVoices();
+  // Try preferred list first
+  for (const name of PREFERRED_VOICES) {
+    const v = voices.find(v => v.name.includes(name));
+    if (v) { _cachedVoice = v; return v; }
   }
+  // Fallback: any de-DE voice
+  const deDE = voices.find(v => v.lang === 'de-DE');
+  if (deDE) { _cachedVoice = deDE; return deDE; }
+  // Last resort: any German voice
+  const de = voices.find(v => v.lang.startsWith('de'));
+  _cachedVoice = de || null;
+  return _cachedVoice;
 }
+
+function speak(word) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel(); // stop any ongoing speech
+  const u = new SpeechSynthesisUtterance(word);
+  u.lang  = 'de-DE';
+  u.rate  = 0.85;   // slightly slower — clearer for learning
+  u.pitch = 1.0;
+  u.volume = 1.0;
+  const voice = getBestGermanVoice();
+  if (voice) u.voice = voice;
+  speechSynthesis.speak(u);
+}
+
+// Pre-load voices (Chrome loads async)
+if ('speechSynthesis' in window) {
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => { _cachedVoice = null; };
+}
+
 
 function handleAnswer(btn) {
   const correct = btn.dataset.correct === 'true';
