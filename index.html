@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Deutsch für Kinder 🇩🇪</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="data/lessons.js"></script>
+  <script src="js/games.js"></script>
+</head>
+<body>
+<div id="app">
+  <main id="main-content"></main>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+const state = {
+  avatarType: localStorage.getItem('avatarType') || null,
+  stars:      parseInt(localStorage.getItem('stars'))  || 0,
+  xp:         parseInt(localStorage.getItem('xp'))     || 0,
+  level:      parseInt(localStorage.getItem('level'))  || 1,
+  completedLessons: JSON.parse(localStorage.getItem('completedLessons') || '[]'),
+};
+
+function saveState() {
+  localStorage.setItem('avatarType',        state.avatarType || '');
+  localStorage.setItem('stars',             state.stars);
+  localStorage.setItem('xp',               state.xp);
+  localStorage.setItem('level',            state.level);
+  localStorage.setItem('completedLessons', JSON.stringify(state.completedLessons));
+}
+
+function addStars(n) {
+  state.stars += n;
+  state.xp    += n * 50;
+  if (state.xp >= 500) { state.level++; state.xp -= 500; }
+  saveState();
+}
+
+// ── AVATARS ────────────────────────────────────────────
+const AVATARS = [
+  { id:'rocket',  emoji:'🚀', name:'Rocket',  desc:'Fast & adventurous' },
+  { id:'dragon',  emoji:'🐲', name:'Drachen',  desc:'Brave & clever' },
+  { id:'unicorn', emoji:'🦄', name:'Einhorn', desc:'Creative & fun' },
+  { id:'robot',   emoji:'🤖', name:'Robo',    desc:'Logical & precise' },
+  { id:'fox',     emoji:'🦊', name:'Fuchs',   desc:'Smart & quick' },
+  { id:'owl',     emoji:'🦉', name:'Eule',    desc:'Wise & studious' },
+];
+
+function getEmoji() {
+  const a = AVATARS.find(x => x.id === state.avatarType);
+  return a ? a.emoji : '😊';
+}
+
+// ── ROUTER ─────────────────────────────────────────────
+function navigate(route) {
+  const main = document.getElementById('main-content');
+  // remove any leftover overlays
+  document.querySelectorAll('.complete-overlay,.confetti-wrap').forEach(e => e.remove());
+
+  switch(route) {
+    case 'splash':          main.innerHTML = splashHTML();       splashHandlers();       break;
+    case 'selection_or_home':
+      if (!state.avatarType) navigate('selection');
+      else navigate('home');
+      break;
+    case 'selection':       main.innerHTML = selectionHTML();    selectionHandlers();    break;
+    case 'home':            main.innerHTML = homeHTML();         homeHandlers();         break;
+    case 'map':             main.innerHTML = mapHTML();          mapHandlers();          break;
+    case 'lesson-list':     main.innerHTML = lessonListHTML();   lessonListHandlers();   break;
+    case 'lesson':          startLesson();                                                break;
+    // ── THÊM SCREEN MỚI TẠI ĐÂY ──
+    case 'games':           main.innerHTML = gamesHTML();        break;
+    case 'game-drag':       main.innerHTML = gameDragHTML();     break;
+    case 'game-quiz':       main.innerHTML = gameQuizHTML();     break;
+    case 'game-memory':     main.innerHTML = gameMemoryHTML();   break;
+    case 'stories':         main.innerHTML = storiesHTML();      storiesHandlers();      break;
+    case 'discover':        main.innerHTML = discoverHTML();     discoverHandlers();     break;
+    case 'activities':      main.innerHTML = activitiesHTML();   activitiesHandlers();   break;
+    default:                navigate('home');
+  }
+}
+
+// ── SPLASH ─────────────────────────────────────────────
+function splashHTML() {
+  return `
+  <div class="splash">
+    <div class="splash-bg-blob b1"></div>
+    <div class="splash-bg-blob b2"></div>
+    <div class="splash-bg-blob b3"></div>
+    <div class="splash-stars">
+      <span class="splash-star" style="top:12%;left:8%;animation-delay:0s">⭐</span>
+      <span class="splash-star" style="top:22%;right:10%;animation-delay:.6s">✨</span>
+      <span class="splash-star" style="top:38%;left:6%;animation-delay:1.1s">💫</span>
+      <span class="splash-star" style="top:42%;right:6%;animation-delay:.3s">⭐</span>
+      <span class="splash-star" style="top:56%;left:16%;animation-delay:.9s">✨</span>
+    </div>
+    <img class="splash-mascot" src="img/mascot.png" alt="Luna" onerror="this.style.fontSize='8rem';this.outerHTML='<div class=splash-mascot style=text-align:center;padding-top:60px;font-size:9rem>🧒</div>'">
+    <div class="splash-content">
+      <div class="splash-hi">👋 Hallo!</div>
+      <h1 class="splash-title">Let's Start Your<br><span>Lernen</span><br>Adventure!</h1>
+      <p class="splash-sub">🇩🇪 Learn German with Luna</p>
+      <div class="splash-actions">
+        <button class="btn-skip" id="btn-skip">Skip</button>
+        <button class="btn-start" id="btn-start">Start Learning <span class="btn-start-arrow">→</span></button>
+      </div>
+    </div>
+  </div>`;
+}
+function splashHandlers() {
+  document.getElementById('btn-start')?.addEventListener('click', () => navigate('selection_or_home'));
+  document.getElementById('btn-skip')?.addEventListener('click',  () => navigate('selection_or_home'));
+}
+
+// ── AVATAR SELECTION ───────────────────────────────────
+function selectionHTML() {
+  return `
+  <div class="screen-padding selection-screen">
+    <h1 class="selection-title">Choose Your Buddy</h1>
+    <p class="selection-subtitle">Who will join you on your German adventure?</p>
+    <div class="avatar-grid">
+      ${AVATARS.map(a => `
+        <div class="avatar-card" data-id="${a.id}">
+          <div class="avatar-card-emoji">${a.emoji}</div>
+          <div class="avatar-card-name">${a.name}</div>
+          <div class="avatar-card-personality">${a.desc}</div>
+        </div>`).join('')}
+    </div>
+    <div style="width:100%;max-width:300px;margin-top:40px;">
+      <button class="btn primary disabled" id="btn-confirm-avatar" style="border-radius:50px;">Let's go! 🚀</button>
+    </div>
+  </div>`;
+}
+function selectionHandlers() {
+  let sel = null;
+  const cards  = document.querySelectorAll('.avatar-card');
+  const confirm = document.getElementById('btn-confirm-avatar');
+  cards.forEach(c => c.addEventListener('click', () => {
+    cards.forEach(x => x.classList.remove('selected'));
+    c.classList.add('selected');
+    sel = c.dataset.id;
+    confirm.classList.remove('disabled');
+  }));
+  confirm.addEventListener('click', () => {
+    if (sel) { state.avatarType = sel; saveState(); navigate('home'); }
+  });
+}
+
+// ── HOME ───────────────────────────────────────────────
+function homeHTML() {
+  const xpPct = Math.min(100, Math.round((state.xp/500)*100));
+  const name  = state.avatarType ? state.avatarType.charAt(0).toUpperCase()+state.avatarType.slice(1) : 'Freund';
+  const cats  = [
+    {icon:'📚', label:'Lessons',    route:'lesson-list'},
+    {icon:'🎮', label:'Games',      route:'games'},
+    {icon:'📖', label:'Stories',    route:'stories'},
+    {icon:'🎨', label:'Activities', route:'activities'},
+    {icon:'🔭', label:'Discover',   route:'discover'},
+  ];
+  const feats = [
+    {icon:'📚', title:'Lessons',    desc:'Vocabulary & grammar from A1 to B2.',       route:'lesson-list', border:'#818CF8', bg:'#EDE9FE'},
+    {icon:'📖', title:'Stories',    desc:'Short German stories for beginners.',        route:'stories',     border:'#34D399', bg:'#D1FAE5'},
+    {icon:'🔭', title:'Discover',   desc:'Culture, geography & fun facts about Germany.',route:'discover',  border:'#F472B6', bg:'#FCE7F3'},
+    {icon:'🎮', title:'Games',      desc:'Adventure on the map and earn stars!',      route:'games',       border:'#FBBF24', bg:'#FEF3C7'},
+    {icon:'🎨', title:'Activities', desc:'Matching games and fun challenges.',         route:'activities',  border:'#60A5FA', bg:'#EFF6FF'},
+  ];
+  return `
+  <div class="home-screen">
+    <div class="home-header">
+      <div class="home-avatar-wrap">${getEmoji()}</div>
+      <div class="home-greeting">
+        <div class="home-greeting-name">Hallo, ${name}!</div>
+        <div class="home-greeting-sub">📈 Progress ${xpPct}%</div>
+      </div>
+      <div class="home-notif">🔔<span class="home-notif-dot"></span></div>
+    </div>
+    <div class="home-body">
+      <div class="xp-card">
+        <div class="xp-card-trophy">🏆</div>
+        <div class="xp-card-title">Level ${state.level}</div>
+        <div class="xp-card-sub">This is your first step to greatness!</div>
+        <div class="xp-bar-track"><div class="xp-bar-fill" style="width:${xpPct}%"></div></div>
+      </div>
+      <p class="section-title">Categories</p>
+      <div class="category-row">
+        ${cats.map((c,i)=>`
+          <div class="cat-item" data-route="${c.route}">
+            <div class="cat-icon${i===0?' active':''}">${c.icon}</div>
+            <span class="cat-label">${c.label}</span>
+          </div>`).join('')}
+      </div>
+      <p class="section-title">Featured</p>
+      ${feats.map(f=>`
+        <div class="feat-card" data-route="${f.route}" style="border-left:4px solid ${f.border}">
+          <div class="feat-icon" style="background:${f.bg}">${f.icon}</div>
+          <div class="feat-info">
+            <div class="feat-title">${f.title}</div>
+            <div class="feat-desc">${f.desc}</div>
+          </div>
+          <div class="feat-arrow">↗</div>
+        </div>`).join('')}
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-route="home"><span class="nav-icon">🏠</span>Home</button>
+      <button class="nav-item" data-route="map"><span class="nav-icon">🗺️</span>Map</button>
+      <button class="nav-item" data-route="lesson-list"><span class="nav-icon">📚</span>Lessons</button>
+      <button class="nav-item" data-route="home"><span class="nav-icon">⚙️</span>Settings</button>
+    </nav>
+  </div>`;
+}
+function homeHandlers() {
+  document.querySelectorAll('[data-route]').forEach(el => {
+    el.addEventListener('click', () => navigate(el.dataset.route));
+  });
+}
+
+// ── MAP ────────────────────────────────────────────────
+const MAP_LEVELS = [
+  {id:1,top:'78%',left:'18%'},{id:2,top:'68%',left:'52%'},
+  {id:3,top:'58%',left:'14%'},{id:4,top:'47%',left:'48%'},
+  {id:5,top:'38%',left:'55%'},{id:6,top:'28%',left:'16%'},
+  {id:7,top:'19%',left:'44%'},{id:8,top:'11%',left:'52%'},
+  {id:9,top:'4%', left:'28%'},
+];
+function mapHTML() {
+  const done = state.completedLessons;
+  const nodes = MAP_LEVELS.map(l => {
+    const isDone   = done.includes('l'+l.id);
+    const isActive = !isDone && (l.id===1 || done.includes('l'+(l.id-1)));
+    const cls      = isDone?'done':isActive?'active':'locked';
+    return `<div class="map-node ${cls}" style="top:${l.top};left:${l.left};" data-id="l${l.id}">
+      ${isActive?'<span class="map-node-flag">🚩</span>':''}
+      ${isDone?'⭐':l.id}
+    </div>`;
+  }).join('');
+  return `
+  <div class="map-screen">
+    <div class="map-bg"></div>
+    <div class="map-bg-overlay"></div>
+    <div class="map-topbar">
+      <div class="map-stat coins">🪙 <span>${state.stars*10}</span></div>
+      <div class="map-stat stars">⭐ <span>${state.stars}</span></div>
+    </div>
+    <div class="map-nodes" style="position:relative;min-height:calc(100vh - 160px);">${nodes}</div>
+    <div class="map-bottombar">
+      <button class="map-btn" id="map-home">🏠</button>
+      <button class="map-btn" id="map-lessons">📚</button>
+      <button class="map-btn">⏱️</button>
+      <button class="map-btn">⚙️</button>
+      <button class="map-btn">✉️</button>
+    </div>
+  </div>`;
+}
+function mapHandlers() {
+  document.querySelectorAll('.map-node:not(.locked)').forEach(n =>
+    n.addEventListener('click', () => navigate('lesson-list')));
+  document.getElementById('map-home')?.addEventListener('click',    () => navigate('home'));
+  document.getElementById('map-lessons')?.addEventListener('click', () => navigate('lesson-list'));
+}
+
+// ── LESSON LIST ────────────────────────────────────────
+let activeLevel = 'A1';
+
+function lessonListHTML() {
+  const data = window.LESSON_DATA || { levels: [] };
+  const level = data.levels.find(l => l.id === activeLevel) || data.levels[0];
+  const lessons = level ? level.lessons : [];
+
+  return `
+  <div class="lesson-screen">
+    <div class="lesson-header">
+      <button class="lesson-back" id="btn-back-list">←</button>
+      <h1 class="lesson-title">Pick a New<br><em>Learning Lesson</em></h1>
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="Search lessons..." />
+      </div>
+      <div class="filter-tabs">
+        ${data.levels.map(l => `
+          <button class="tab-pill${l.id === activeLevel ? ' active' : ''}" data-level="${l.id}"
+            style="${l.id === activeLevel ? 'background:'+l.color+';color:white;' : ''}">
+            ${l.icon} ${l.id}
+          </button>`).join('')}
+      </div>
+    </div>
+    <div class="lesson-list">
+      ${lessons.map((l,i) => {
+        const done = state.completedLessons.includes(l.id);
+        const isOpen = l.unlocked || done;
+        return `
+        <div class="lesson-card" data-id="${l.id}" data-unlocked="${isOpen}">
+          <div>
+            <div class="lesson-card-label" style="color:${level.color}">${level.id} · ${l.subtitle}</div>
+            <div class="lesson-card-title">${l.icon} ${l.title}</div>
+            <div class="lesson-card-desc">${l.questions.length} questions${done ? ' · ✅ Done' : ''}</div>
+          </div>
+          <div class="lesson-card-badge" style="background:${done?level.color:'#1E1B4B'}">
+            ${done ? '⭐' : `0/${l.questions.length}`}
+          </div>
+          <div class="lesson-card-footer">
+            ${isOpen
+              ? `<button class="btn-lesson-action start" data-id="${l.id}" style="background:${level.color}">▶ ${done?'Review':'Start'}</button>`
+              : `<button class="btn-lesson-action locked">🔒 Unlock</button>`}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function lessonListHandlers() {
+  document.getElementById('btn-back-list')?.addEventListener('click', () => navigate('home'));
+  document.querySelectorAll('.tab-pill[data-level]').forEach(b => b.addEventListener('click', () => {
+    activeLevel = b.dataset.level;
+    document.getElementById('main-content').innerHTML = lessonListHTML();
+    lessonListHandlers();
+  }));
+  document.querySelectorAll('.btn-lesson-action.start[data-id]').forEach(b => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentLessonId = b.dataset.id;
+      navigate('lesson');
+    });
+  });
+}
+
+// ── LESSON / QUIZ ──────────────────────────────────────
+let currentLessonId = null;
+let curQ = 0, quizScore = 0;
+
+function getLessonQuestions() {
+  if (!window.LESSON_DATA || !currentLessonId) return FALLBACK_Q;
+  for (const level of window.LESSON_DATA.levels) {
+    const lesson = level.lessons.find(l => l.id === currentLessonId);
+    if (lesson) return lesson.questions;
+  }
+  return FALLBACK_Q;
+}
+
+const FALLBACK_Q = [
+  {emoji:'🍎',german:'Apfel',    english:'Apple',  choices:['Apfel','Banane','Brot','Milch']},
+  {emoji:'🐶',german:'Hund',     english:'Dog',    choices:['Katze','Hund','Vogel','Fisch']},
+  {emoji:'🏠',german:'Haus',     english:'House',  choices:['Schule','Haus','Auto','Buch']},
+  {emoji:'🌞',german:'Sonne',    english:'Sun',    choices:['Mond','Sonne','Stern','Wolke']},
+  {emoji:'📚',german:'Bücher',   english:'Books',  choices:['Stift','Bücher','Tafel','Heft']},
+];
+
+let activeQuestions = [];
+
+function startLesson() {
+  activeQuestions = getLessonQuestions();
+  curQ = 0; quizScore = 0;
+  renderQ();
+}
+
+function renderQ() {
+  const main = document.getElementById('main-content');
+  const q    = activeQuestions[curQ];
+  const pct  = Math.round((curQ/activeQuestions.length)*100);
+  const shuffled = [...q.choices].sort(()=>Math.random()-.5);
+  main.innerHTML = `
+  <div style="display:flex;flex-direction:column;min-height:100vh;padding:20px;background:var(--bg);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;">
+      <button onclick="navigate('lesson-list')" style="background:none;border:none;font-size:1.6rem;cursor:pointer;">✖️</button>
+      <div style="flex:1;height:14px;background:#E9E5FF;border-radius:7px;overflow:hidden;">
+        <div style="height:100%;background:var(--purple);width:${pct}%;border-radius:7px;transition:width .5s;"></div>
+      </div>
+      <div style="font-size:.85rem;font-weight:900;color:var(--purple);">${curQ}/${activeQuestions.length}</div>
+    </div>
+    <div style="background:white;border-radius:28px;padding:36px 24px;text-align:center;box-shadow:0 8px 32px rgba(124,58,237,.12);margin-bottom:28px;border:2px solid #EDE9FE;">
+      <div style="font-size:5rem;margin-bottom:16px;">${q.emoji}</div>
+      <h2 style="font-size:2.4rem;font-weight:900;color:var(--purple);margin-bottom:8px;">${q.german}</h2>
+      <div style="font-size:1.1rem;color:var(--dim);font-weight:700;">${q.english || q.viet || ''}</div>
+      <button onclick="speak('${q.german}')" style="margin-top:20px;background:#F3F0FF;border:none;border-radius:50%;width:60px;height:60px;font-size:1.6rem;cursor:pointer;">🔊</button>
+    </div>
+    <p style="text-align:center;font-weight:800;color:var(--dim);margin-bottom:16px;">Pick the correct answer:</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="choices">
+      ${shuffled.map(c=>`
+        <button class="choice-btn" data-correct="${c===q.german}"
+          onclick="handleAnswer(this)"
+          style="background:white;border:3px solid #E9E5FF;border-radius:20px;padding:18px 12px;
+                 font-family:var(--font);font-size:1.05rem;font-weight:800;color:var(--text);
+                 cursor:pointer;box-shadow:0 4px 0 #E9E5FF;">${c}</button>`).join('')}
+    </div>
+    <div style="text-align:center;margin-top:auto;padding-top:24px;" id="quiz-avatar">
+      <span style="font-size:3.5rem;display:inline-block;animation:breathe 3s ease-in-out infinite;">${getEmoji()}</span>
+    </div>
+  </div>`;
+}
+
+function speak(word) {
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance(word);
+    u.lang = 'de-DE'; speechSynthesis.speak(u);
+  }
+}
+
+function handleAnswer(btn) {
+  const correct = btn.dataset.correct === 'true';
+  document.querySelectorAll('.choice-btn').forEach(b => {
+    b.onclick = null;
+    if (b.dataset.correct==='true') { b.style.background='#D1FAE5'; b.style.borderColor='#10B981'; }
+  });
+  const av = document.getElementById('quiz-avatar');
+  if (correct) {
+    quizScore += 100;
+    btn.style.background='#D1FAE5'; btn.style.borderColor='#10B981';
+    if (av) av.innerHTML=`<span style="font-size:3.5rem;display:inline-block;animation:bounce .6s infinite alternate;">🥳</span>`;
+    setTimeout(nextQ, 900);
+  } else {
+    btn.style.background='#FEE2E2'; btn.style.borderColor='#EF4444';
+    if (av) av.innerHTML=`<span style="font-size:3.5rem;display:inline-block;">😢</span>`;
+    setTimeout(nextQ, 1600);
+  }
+}
+
+function nextQ() {
+  curQ++;
+  if (curQ >= activeQuestions.length) {
+    if (currentLessonId) {
+      if (!state.completedLessons.includes(currentLessonId)) {
+        state.completedLessons.push(currentLessonId);
+        localStorage.setItem('completedLessons', JSON.stringify(state.completedLessons));
+      }
+    }
+    addStars(3);
+    document.getElementById('main-content').innerHTML='';
+    showComplete(quizScore+100, 240, 3);
+  } else { renderQ(); }
+}
+
+// ── COMPLETE POPUP ─────────────────────────────────────
+function showComplete(score, target, stars) {
+  const wrap = document.createElement('div');
+  wrap.className = 'confetti-wrap';
+  const cols=['#F472B6','#FBBF24','#34D399','#60A5FA','#A78BFA','#F87171'];
+  for(let i=0;i<60;i++){
+    const p=document.createElement('div');
+    p.className='confetti-piece';
+    p.style.cssText=`left:${Math.random()*100}%;background:${cols[~~(Math.random()*6)]};
+      width:${Math.random()*10+6}px;height:${Math.random()*10+6}px;
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      animation-duration:${Math.random()*2+2}s;animation-delay:${Math.random()*2}s;`;
+    wrap.appendChild(p);
+  }
+  document.body.appendChild(wrap);
+
+  const ov=document.createElement('div');
+  ov.className='complete-overlay';
+  ov.innerHTML=`
+    <div class="complete-card">
+      <div class="complete-stars">
+        <span class="complete-star" style="${stars<2?'filter:grayscale(1)':''}">⭐</span>
+        <span class="complete-star mid">⭐</span>
+        <span class="complete-star" style="${stars<3?'filter:grayscale(1)':''}">⭐</span>
+      </div>
+      <div class="complete-level">Level ${state.level}</div>
+      <div class="complete-banner">Complete!</div>
+      <div class="complete-stats">
+        Target: ${target.toLocaleString()} <span class="check">✔</span><br>
+        Your Score: <span class="score">${score.toLocaleString()}</span>
+      </div>
+      <div class="complete-actions">
+        <button class="complete-action-btn home" onclick="cleanup();navigate('home')" title="Home">🏠</button>
+        <button class="complete-action-btn next" onclick="cleanup();navigate('lesson-list')" title="Next">⏩</button>
+        <button class="complete-action-btn retry" onclick="cleanup();navigate('lesson')" title="Retry">🔄</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+function cleanup() {
+  document.querySelectorAll('.complete-overlay,.confetti-wrap').forEach(e=>e.remove());
+}
+
+// ── STORIES ────────────────────────────────────────────
+// Add new stories: add an object to the STORIES array below
+const STORIES = [
+  {
+    id:'s1', level:'A1', icon:'🐶', title:'Max und sein Hund',
+    preview:'Max hat einen Hund. Der Hund heißt Bello...',
+    text: `Max hat einen Hund. Der Hund heißt Bello.
+Bello ist braun und sehr groß.
+Max und Bello spielen jeden Tag im Park.
+Bello liebt Bälle. Max wirft den Ball.
+Bello läuft schnell und bringt den Ball zurück.
+„Guter Hund, Bello!", sagt Max.`,
+    english:`Max has a dog. The dog's name is Bello.
+Bello is brown and very big.
+Max and Bello play in the park every day.
+Bello loves balls. Max throws the ball.
+Bello runs fast and brings the ball back.
+"Good dog, Bello!", says Max.`
+  },
+  {
+    id:'s2', level:'A1', icon:'🍎', title:'Im Supermarkt',
+    preview:'Anna geht mit ihrer Mutter in den Supermarkt...',
+    text: `Anna geht mit ihrer Mutter in den Supermarkt.
+Sie brauchen: Äpfel, Milch, Brot und Käse.
+Anna nimmt die Äpfel. Sie sind rot und frisch.
+Die Mutter nimmt die Milch und das Brot.
+An der Kasse sagt die Mutter: „Danke!"
+Die Kassiererin sagt: „Auf Wiedersehen!"`,
+    english:`Anna goes to the supermarket with her mother.
+They need: apples, milk, bread and cheese.
+Anna takes the apples. They are red and fresh.
+The mother takes the milk and the bread.
+At the checkout the mother says: "Thank you!"
+The cashier says: "Goodbye!"`
+  },
+  {
+    id:'s3', level:'A2', icon:'🏫', title:'Ein Tag in der Schule',
+    preview:'Tim geht um 7 Uhr in die Schule...',
+    text: `Tim geht um 7 Uhr in die Schule.
+Sein Lieblingsfach ist Mathematik.
+Um 10 Uhr haben die Schüler eine Pause.
+Tim spielt mit seinen Freunden Fußball.
+Nach der Schule macht Tim seine Hausaufgaben.
+Dann spielt er Computer.`,
+    english:`Tim goes to school at 7 o'clock.
+His favourite subject is mathematics.
+At 10 o'clock the students have a break.
+Tim plays football with his friends.
+After school, Tim does his homework.
+Then he plays on the computer.`
+  },
+];
+
+let activeStory = null;
+
+
+function storiesHTML() {
+  if (activeStory) return storyReadHTML(activeStory);
+  return `
+  <div class="lesson-screen">
+    <div class="lesson-header">
+      <button class="lesson-back" id="btn-back-stories">←</button>
+      <h1 class="lesson-title">📖 Stories<br><em>in German</em></h1>
+    </div>
+    <div class="lesson-list">
+      ${STORIES.map(s => `
+        <div class="feat-card" data-story="${s.id}" style="cursor:pointer;margin-bottom:16px;">
+          <div class="feat-icon" style="background:#D1FAE5;font-size:2rem;">${s.icon}</div>
+          <div class="feat-info">
+            <div style="font-size:.7rem;font-weight:900;color:#34D399;text-transform:uppercase;margin-bottom:4px;">${s.level}</div>
+            <div class="feat-title">${s.title}</div>
+            <div class="feat-desc">${s.preview}</div>
+          </div>
+          <div class="feat-arrow" style="background:#34D399;">→</div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function storyReadHTML(s) {
+  return `
+  <div style="display:flex;flex-direction:column;min-height:100vh;background:var(--bg);padding:20px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+      <button id="btn-close-story" style="background:none;border:none;font-size:1.6rem;cursor:pointer;">←</button>
+      <span style="font-size:1rem;font-weight:900;color:var(--purple);">${s.level} · Story</span>
+    </div>
+    <div style="font-size:3rem;text-align:center;margin-bottom:16px;">${s.icon}</div>
+    <h2 style="font-size:1.6rem;font-weight:900;text-align:center;margin-bottom:24px;">${s.title}</h2>
+    <div style="background:white;border-radius:20px;padding:24px;box-shadow:0 4px 16px rgba(0,0,0,.06);margin-bottom:16px;">
+      <p style="font-size:.95rem;font-weight:700;line-height:1.9;color:var(--text);white-space:pre-line;">${s.text}</p>
+    </div>
+      <div style="background:#F0FDF4;border-radius:20px;padding:24px;border-left:4px solid #34D399;">
+      <div style="font-size:.75rem;font-weight:900;color:#34D399;margin-bottom:8px;">🇬🇧 ENGLISH TRANSLATION</div>
+      <p style="font-size:.9rem;font-weight:700;line-height:1.8;color:var(--dim);white-space:pre-line;">${s.english || s.viet}</p>
+    </div>
+  </div>`;
+}
+
+function storiesHandlers() {
+  document.getElementById('btn-back-stories')?.addEventListener('click', () => {
+    activeStory = null; navigate('home');
+  });
+  document.querySelectorAll('[data-story]').forEach(el => {
+    el.addEventListener('click', () => {
+      activeStory = STORIES.find(s => s.id === el.dataset.story);
+      document.getElementById('main-content').innerHTML = storyReadHTML(activeStory);
+      storiesHandlers();
+    });
+  });
+  document.getElementById('btn-close-story')?.addEventListener('click', () => {
+    activeStory = null;
+    document.getElementById('main-content').innerHTML = storiesHTML();
+    storiesHandlers();
+  });
+}
+
+// ── DISCOVER ────────────────────────────────────────────
+// Add new facts: add an object to DISCOVER_FACTS below
+const DISCOVER_FACTS = [
+  { icon:'🏰', title:'Neuschwanstein', cat:'Landmark',  text:'The Neuschwanstein Castle in Bavaria inspired the castle in Disney\'s Cinderella. Construction began in 1869!' },
+  { icon:'🚗', title:'Cars',           cat:'Invention', text:'Germany is home to world-famous car brands: Mercedes-Benz, BMW, Volkswagen, Audi and Porsche.' },
+  { icon:'🍺', title:'Oktoberfest',    cat:'Festival',  text:'The Oktoberfest in Munich is the world\'s largest beer festival, held every September-October with over 6 million visitors.' },
+  { icon:'🎄', title:'Christmas Tree', cat:'Tradition', text:'Germany is the birthplace of the Christmas tree tradition. Germans have been decorating trees since the 16th century!' },
+  { icon:'🖨️', title:'Printing Press', cat:'Invention', text:'Johannes Gutenberg invented the printing press in 1440, completely changing the course of human history.' },
+  { icon:'🎵', title:'Classical Music', cat:'Culture',  text:'Beethoven, Bach, Brahms, Handel, Schumann — all German. Germany is the cradle of classical music.' },
+  { icon:'🧠', title:'German Words',   cat:'Language',  text:'"Kindergarten" is a German word! Many English words come from German: rucksack, hamburger, pretzel, waltz.' },
+  { icon:'🥨', title:'Pretzel',         cat:'Food',     text:'The pretzel (Brezel) is a traditional German snack. Legend says its loop shape represents arms folded in prayer.' },
+];
+
+function discoverHTML() {
+  return `
+  <div class="lesson-screen">
+    <div class="lesson-header">
+      <button class="lesson-back" id="btn-back-discover">←</button>
+      <h1 class="lesson-title">🔭 Discover<br><em>Germany</em></h1>
+    </div>
+    <div class="lesson-list">
+      ${DISCOVER_FACTS.map(f => `
+        <div style="background:white;border-radius:20px;padding:20px;margin-bottom:16px;
+          box-shadow:0 4px 16px rgba(0,0,0,.06);display:flex;gap:16px;align-items:flex-start;">
+          <div style="font-size:2.4rem;flex-shrink:0;">${f.icon}</div>
+          <div>
+            <div style="font-size:.7rem;font-weight:900;color:#F472B6;text-transform:uppercase;margin-bottom:4px;">${f.cat}</div>
+            <div style="font-size:1rem;font-weight:900;margin-bottom:8px;">${f.title}</div>
+            <div style="font-size:.85rem;color:var(--dim);font-weight:700;line-height:1.6;">${f.text}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+function discoverHandlers() {
+  document.getElementById('btn-back-discover')?.addEventListener('click', () => navigate('home'));
+}
+
+// ── ACTIVITIES ──────────────────────────────────────────
+// Word matching game — Add new pairs to MATCH_PAIRS below
+const MATCH_PAIRS = [
+  {de:'Hund',   en:'Dog'},
+  {de:'Katze',  en:'Cat'},
+  {de:'Apfel',  en:'Apple'},
+  {de:'Haus',   en:'House'},
+  {de:'Sonne',  en:'Sun'},
+  {de:'Baum',   en:'Tree'},
+];
+let matchState = { selected: null, matched: [], errors: 0 };
+
+function activitiesHTML() {
+  matchState = { selected: null, matched: [], errors: 0 };
+  const pairs = [...MATCH_PAIRS].sort(() => Math.random() - 0.5).slice(0, 4);
+  const left  = [...pairs].sort(() => Math.random() - 0.5);
+  const right = [...pairs].sort(() => Math.random() - 0.5);
+  window._matchPairs = pairs;
+  return `
+  <div style="display:flex;flex-direction:column;min-height:100vh;background:var(--bg);padding:20px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+      <button id="btn-back-act" style="background:none;border:none;font-size:1.6rem;cursor:pointer;">←</button>
+      <h2 style="font-size:1.2rem;font-weight:900;">🎨 Word Match</h2>
+    </div>
+    <p style="text-align:center;color:var(--dim);font-weight:700;margin-bottom:24px;">Match the German word with its English meaning</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="match-grid">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${left.map(p => `<button class="match-btn left" data-de="${p.de}" style="background:white;border:3px solid #E9E5FF;border-radius:16px;padding:16px;font-family:var(--font);font-size:1rem;font-weight:800;cursor:pointer;color:var(--text);transition:all .2s;">${p.de}</button>`).join('')}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${right.map(p => `<button class="match-btn right" data-de="${p.de}" style="background:white;border:3px solid #E9E5FF;border-radius:16px;padding:16px;font-family:var(--font);font-size:1rem;font-weight:800;cursor:pointer;color:var(--dim);transition:all .2s;">${p.en || p.viet}</button>`).join('')}
+      </div>
+    </div>
+    <div id="match-result" style="text-align:center;margin-top:24px;font-weight:900;font-size:1.1rem;"></div>
+  </div>`;
+}
+
+function activitiesHandlers() {
+  document.getElementById('btn-back-act')?.addEventListener('click', () => navigate('home'));
+  let selLeft = null;
+  document.querySelectorAll('.match-btn.left').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.match-btn.left').forEach(b => b.style.borderColor = '#E9E5FF');
+      selLeft = btn.dataset.de;
+      btn.style.borderColor = '#7C3AED';
+      tryMatch();
+    });
+  });
+  let selRight = null;
+  document.querySelectorAll('.match-btn.right').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.match-btn.right').forEach(b => { if(!b.dataset.matched) b.style.borderColor='#E9E5FF'; });
+      selRight = btn.dataset.de;
+      btn.style.borderColor = '#7C3AED';
+      tryMatch();
+    });
+  });
+  function tryMatch() {
+    if (!selLeft || !selRight) return;
+    const correct = selLeft === selRight;
+    const lBtn = document.querySelector(`.match-btn.left[data-de="${selLeft}"]`);
+    const rBtn = document.querySelector(`.match-btn.right[data-de="${selRight}"]`);
+    if (correct) {
+      [lBtn, rBtn].forEach(b => { b.style.borderColor='#10B981'; b.style.background='#D1FAE5'; b.style.color='#065F46'; b.disabled=true; b.dataset.matched='1'; });
+      const matched = document.querySelectorAll('.match-btn[data-matched]').length / 2;
+      if (matched >= (window._matchPairs?.length || 4)) {
+        document.getElementById('match-result').innerHTML = '🎉 Excellent! <button onclick="navigate(\'activities\')" style="margin-left:12px;background:var(--purple);color:white;border:none;border-radius:50px;padding:8px 20px;font-family:var(--font);font-weight:900;cursor:pointer;">Play again</button>';
+        addStars(1);
+      }
+    } else {
+      [lBtn, rBtn].forEach(b => { b.style.borderColor='#EF4444'; b.style.background='#FEE2E2'; });
+      setTimeout(() => { [lBtn,rBtn].forEach(b=>{b.style.borderColor='#E9E5FF';b.style.background='white';}); }, 800);
+    }
+    selLeft = null; selRight = null;
+  }
+}
+
+// ── BOOT ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => navigate('splash'));
+</script>
+</body>
+</html>
