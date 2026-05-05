@@ -827,3 +827,23 @@ button { -webkit-tap-highlight-color: transparent; }
   0%,100% { transform: scale(1); }
   50%     { transform: scale(1.08); }
 }
+
+/* ── SMART UNLOCK STATES ── */
+.lesson-card.lesson-locked {
+  opacity: .55;
+  filter: grayscale(.4);
+  pointer-events: none;        /* block card-level clicks */
+}
+.lesson-card.lesson-locked .btn-lesson-action.locked {
+  pointer-events: none;
+  background: #CBD5E1 !important;
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+.tab-pill.tab-locked {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.tab-pill.tab-locked:hover {
+  opacity: .6;
+}
