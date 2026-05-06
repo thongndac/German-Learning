@@ -683,7 +683,7 @@ function speak(word) {
   speechSynthesis.cancel(); // stop any ongoing speech
   const u = new SpeechSynthesisUtterance(word);
   u.lang  = 'de-DE';
-  u.rate  = 0.85;   // slightly slower — clearer for learning
+  u.rate  = 1.0;
   u.pitch = 1.0;
   u.volume = 1.0;
   const voice = getBestGermanVoice();

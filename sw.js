@@ -1,5 +1,5 @@
 // ── Service Worker — Deutsch für Kinder ─────────────────
-const CACHE_NAME = 'deutsch-v5';
+const CACHE_NAME = 'deutsch-v6';
 
 // All files to cache for offline use
 const ASSETS = [
