@@ -305,45 +305,168 @@ function homeHandlers() {
 }
 
 // ── MAP ────────────────────────────────────────────────
-const MAP_LEVELS = [
-  {id:1,top:'78%',left:'18%'},{id:2,top:'68%',left:'52%'},
-  {id:3,top:'58%',left:'14%'},{id:4,top:'47%',left:'48%'},
-  {id:5,top:'38%',left:'55%'},{id:6,top:'28%',left:'16%'},
-  {id:7,top:'19%',left:'44%'},{id:8,top:'11%',left:'52%'},
-  {id:9,top:'4%', left:'28%'},
-];
+// ── MAP ────────────────────────────────────────────────
 function mapHTML() {
+  const all = getAllLessons();
   const done = state.completedLessons;
-  const nodes = MAP_LEVELS.map(l => {
-    const isDone   = done.includes('l'+l.id);
-    const isActive = !isDone && (l.id===1 || done.includes('l'+(l.id-1)));
-    const cls      = isDone?'done':isActive?'active':'locked';
-    const glow     = isDone ? 'box-shadow:0 0 18px 6px rgba(251,191,36,.55);' : isActive ? 'box-shadow:0 0 14px 4px rgba(52,211,153,.5);animation:pulseNode 1.4s ease-in-out infinite;' : 'opacity:.45;filter:grayscale(.8);';
-    return `<div class="map-node ${cls}" style="top:${l.top};left:${l.left};${glow}" data-id="l${l.id}">
-      ${isActive?'<span class="map-node-flag">🚩</span>':''}
-      ${isDone?'⭐':isActive?l.id:'🔒'}
-    </div>`;
-  }).join('');
-  return `
-  <div class="map-screen">
-    <div class="map-bg"></div>
-    <div class="map-bg-overlay"></div>
-    <div class="map-topbar">
-      <div class="map-stat coins">⭐ <span>${state.stars}</span></div>
-      <div class="map-stat stars">🔥 <span>${state.streak}d</span></div>
+  let activeIdx = all.findIndex(l => !done.includes(l.id));
+  if (activeIdx === -1) activeIdx = all.length - 1; // All completed
+
+  const pattern = [50, 72, 85, 72, 50, 28, 15, 28]; // Snake pattern %
+  const nodeHeight = 110;
+  const paddingBottom = 120;
+  const paddingTop = 200;
+  const mapHeight = all.length * nodeHeight + paddingBottom + paddingTop;
+
+  // Background Scenery Layers
+  // A1 (0-9), A2 (10-19), B1 (20-29), B2 (30-39)
+  const a1H = 10 * nodeHeight + paddingBottom + 50;
+  const a2H = 10 * nodeHeight + 100;
+  const b1H = 10 * nodeHeight + 100;
+  const b2H = 10 * nodeHeight + paddingTop + 50;
+
+  const bgHtml = `
+    <!-- A1: Green Valley -->
+    <div style="position:absolute; bottom:0; left:0; width:100%; height:${a1H}px; background:url('img/bg_a1.png') bottom center/cover no-repeat; z-index:0;">
+      <div style="position:absolute; bottom:20px; left:20px; font-size:2.5rem; font-weight:900; color:white; text-shadow:0 4px 10px rgba(0,0,0,0.5), 0 0 20px #10B981; opacity:0.8; line-height:1;">A1<br><span style="font-size:1.2rem;">Beginner</span></div>
     </div>
-    <div class="map-nodes" style="position:relative;min-height:calc(100vh - 160px);">${nodes}</div>
-    <div class="map-bottombar">
-      <button class="map-btn" id="map-home">🏠</button>
-      <button class="map-btn" id="map-lessons">📚</button>
-      <button class="map-btn" onclick="navigate('games')">🎮</button>
-      <button class="map-btn" onclick="navigate('home')">⚙️</button>
+    
+    <!-- A2: Golden Desert -->
+    <div style="position:absolute; bottom:${10 * nodeHeight + paddingBottom - 50}px; left:0; width:100%; height:${a2H}px; background:url('img/bg_a2.png') bottom center/cover no-repeat; z-index:1; mask-image:linear-gradient(to bottom, black 85%, transparent); -webkit-mask-image:linear-gradient(to bottom, black 85%, transparent);">
+      <div style="position:absolute; bottom:50px; right:20px; font-size:2.5rem; font-weight:900; color:white; text-shadow:0 4px 10px rgba(0,0,0,0.5), 0 0 20px #F59E0B; opacity:0.8; text-align:right; line-height:1;">A2<br><span style="font-size:1.2rem;">Elementary</span></div>
+    </div>
+    
+    <!-- B1: Snowy Mountain -->
+    <div style="position:absolute; bottom:${20 * nodeHeight + paddingBottom - 50}px; left:0; width:100%; height:${b1H}px; background:url('img/bg_b1.png') bottom center/cover no-repeat; z-index:2; mask-image:linear-gradient(to bottom, black 85%, transparent); -webkit-mask-image:linear-gradient(to bottom, black 85%, transparent);">
+      <div style="position:absolute; bottom:50px; left:20px; font-size:2.5rem; font-weight:900; color:white; text-shadow:0 4px 10px rgba(0,0,0,0.5), 0 0 20px #3B82F6; opacity:0.8; line-height:1;">B1<br><span style="font-size:1.2rem;">Intermediate</span></div>
+    </div>
+    
+    <!-- B2: Magic Castle -->
+    <div style="position:absolute; bottom:${30 * nodeHeight + paddingBottom - 50}px; left:0; width:100%; height:${b2H}px; background:url('img/bg_b2.png') bottom center/cover no-repeat; z-index:3; mask-image:linear-gradient(to bottom, black 85%, transparent); -webkit-mask-image:linear-gradient(to bottom, black 85%, transparent);">
+      <div style="position:absolute; bottom:50px; right:20px; font-size:2.5rem; font-weight:900; color:white; text-shadow:0 4px 10px rgba(0,0,0,0.5), 0 0 20px #8B5CF6; opacity:0.8; text-align:right; line-height:1;">B2<br><span style="font-size:1.2rem;">Advanced</span></div>
+    </div>
+  `;
+
+  // 1. Draw SVG curved path
+  const mapWidth = Math.min(window.innerWidth || 400, 430);
+  let svgPathUnlocked = '';
+  let svgPathLocked = '';
+  
+  for (let i = 0; i < all.length - 1; i++) {
+    const x1 = (pattern[i % pattern.length] / 100) * mapWidth;
+    const y1 = mapHeight - (i * nodeHeight + paddingBottom + 35);
+    const x2 = (pattern[(i + 1) % pattern.length] / 100) * mapWidth;
+    const y2 = mapHeight - ((i + 1) * nodeHeight + paddingBottom + 35);
+    
+    // Control points for cubic bezier (S-curve vertically)
+    const cy1 = y1 - nodeHeight * 0.45;
+    const cy2 = y2 + nodeHeight * 0.45;
+    
+    const d = `M ${x1} ${y1} C ${x1} ${cy1}, ${x2} ${cy2}, ${x2} ${y2} `;
+    
+    if (i < activeIdx) {
+      svgPathUnlocked += d;
+    } else {
+      svgPathLocked += d;
+    }
+  }
+
+  const svgHtml = `
+    <svg style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:4;">
+      <!-- Locked path -->
+      <path d="${svgPathLocked}" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+      <!-- Unlocked path base -->
+      <path d="${svgPathUnlocked}" fill="none" stroke="#FBBF24" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+      <!-- Unlocked path inner highlight -->
+      <path d="${svgPathUnlocked}" fill="none" stroke="#FCD34D" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  `;
+
+  let nodesHtml = '';
+  // 2. Draw nodes from bottom up
+  all.forEach((l, i) => {
+    const isDone = done.includes(l.id);
+    const isActive = i === activeIdx;
+    const isLocked = i > activeIdx;
+
+    const x = pattern[i % pattern.length];
+    const y = i * nodeHeight + paddingBottom;
+
+    let bg = isDone ? '#10B981' : isActive ? '#FBBF24' : '#F3F4F6';
+    let border = isDone ? '#059669' : isActive ? '#D97706' : '#9CA3AF';
+    let icon = isDone ? '⭐' : isActive ? l.icon : '🔒';
+    let cls = isDone ? 'done' : isActive ? 'active' : 'locked';
+    
+    let avatarMarker = isActive ? `
+      <div style="position:absolute; top:-65px; left:50%; transform:translateX(-50%); font-size:4rem; filter:drop-shadow(0 8px 8px rgba(0,0,0,0.3)); animation: bounce-flag 0.8s infinite alternate cubic-bezier(0.34, 1.56, 0.64, 1); z-index:10;">
+        ${getEmoji()}
+      </div>` : '';
+
+    nodesHtml += `
+      <div class="map-node ${cls}" data-lesson="${l.id}" style="
+        left:calc(${x}% - 35px); bottom:${y}px; top:auto;
+        background:${bg}; border-color:${border};
+        box-shadow: 0 8px 0 ${border}${isActive ? ', 0 0 0 8px rgba(251,191,36,0.4), 0 12px 24px rgba(0,0,0,0.2)' : ', 0 10px 15px rgba(0,0,0,0.15)'};
+        z-index:${isActive ? 6 : 5};
+      ">
+        ${avatarMarker}
+        ${icon}
+      </div>
+    `;
+  });
+
+  // Auto-scroll to active node
+  setTimeout(() => {
+    const container = document.getElementById('map-scroll-area');
+    if (container) {
+       const yPos = activeIdx * nodeHeight + paddingBottom;
+       const targetScroll = mapHeight - yPos - (window.innerHeight / 2) + 50;
+       container.scrollTop = Math.max(0, targetScroll);
+    }
+  }, 50);
+
+  return `
+  <div class="map-screen" style="position:relative; height:100vh; background:#111827; overflow:hidden;">
+    <div class="map-topbar" style="position:absolute; top:0; left:0; width:100%; z-index:20; background:linear-gradient(to bottom, rgba(0,0,0,0.6) 10%, rgba(0,0,0,0)); padding:20px;">
+      <div style="display:flex; justify-content:space-between;">
+        <div style="background:rgba(255,255,255,0.9); padding:8px 16px; border-radius:20px; font-weight:900; box-shadow:0 4px 12px rgba(0,0,0,0.2); color:#F59E0B; display:flex; align-items:center; gap:8px; backdrop-filter:blur(4px);">
+          <span style="font-size:1.2rem;">⭐</span> <span>${state.stars}</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.9); padding:8px 16px; border-radius:20px; font-weight:900; box-shadow:0 4px 12px rgba(0,0,0,0.2); color:#EF4444; display:flex; align-items:center; gap:8px; backdrop-filter:blur(4px);">
+          <span style="font-size:1.2rem;">🔥</span> <span>${state.streak}d</span>
+        </div>
+      </div>
+    </div>
+    
+    <div id="map-scroll-area" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow-y:auto; scroll-behavior:smooth;">
+      <div style="position:relative; width:100%; height:${mapHeight}px;">
+        ${bgHtml}
+        ${svgHtml}
+        ${nodesHtml}
+      </div>
+    </div>
+
+    <div class="map-bottombar" style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:100%; z-index:20; background:var(--purple-dark); border-radius:24px 24px 0 0; padding:12px 20px 24px; display:flex; gap:12px; justify-content:center; box-shadow:0 -4px 20px rgba(0,0,0,0.15);">
+      <button class="map-btn" id="map-home" style="background:rgba(255,255,255,0.15); border:none; font-size:1.3rem;">🏠</button>
+      <button class="map-btn" id="map-lessons" style="background:rgba(255,255,255,0.15); border:none; font-size:1.3rem;">📚</button>
+      <button class="map-btn active" style="background:white; color:var(--purple); border:none; font-size:1.3rem;">🗺️</button>
+      <button class="map-btn" onclick="navigate('games')" style="background:rgba(255,255,255,0.15); border:none; font-size:1.3rem;">🎮</button>
     </div>
   </div>`;
 }
+
 function mapHandlers() {
   document.querySelectorAll('.map-node:not(.locked)').forEach(n =>
-    n.addEventListener('click', () => navigate('lesson-list')));
+    n.addEventListener('click', () => {
+      // Auto-jump to the correct level tab when clicking a node
+      const lId = n.dataset.lesson; 
+      if (lId) {
+        const lvl = lId.split('_')[0].toUpperCase();
+        activeLevel = lvl;
+      }
+      navigate('lesson-list');
+    })
+  );
   document.getElementById('map-home')?.addEventListener('click',    () => navigate('home'));
   document.getElementById('map-lessons')?.addEventListener('click', () => navigate('lesson-list'));
 }
@@ -1085,7 +1208,7 @@ function storyReadHTML(s) {
       <div style="background:#F5F3FF;border-radius:20px;padding:22px 20px;border-left:4px solid #7C3AED;box-shadow:0 2px 10px rgba(124,58,237,.08);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <span style="font-size:.7rem;font-weight:900;background:#EDE9FE;color:#7C3AED;padding:3px 10px;border-radius:20px;">🇩🇪 AUF DEUTSCH</span>
-          <button onclick="speak(\`${s.text.replace(/`/g,"'").replace(/\\/g,'\\\\')}\`)"
+          <button id="btn-read-story-de"
             style="background:#EDE9FE;border:none;border-radius:50%;width:36px;height:36px;font-size:1.1rem;cursor:pointer;">🔊</button>
         </div>
         <p style="font-size:.97rem;font-weight:700;line-height:1.9;color:var(--text);white-space:pre-line;margin:0;">${s.text}</p>
@@ -1145,6 +1268,9 @@ function storiesHandlers() {
     activeStory = null;
     document.getElementById('main-content').innerHTML = storiesHTML();
     storiesHandlers();
+  });
+  document.getElementById('btn-read-story-de')?.addEventListener('click', () => {
+    if (activeStory && activeStory.text) speak(activeStory.text);
   });
 }
 

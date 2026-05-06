@@ -1,5 +1,5 @@
 // ── Service Worker — Deutsch für Kinder ─────────────────
-const CACHE_NAME = 'deutsch-v2';
+const CACHE_NAME = 'deutsch-v5';
 
 // All files to cache for offline use
 const ASSETS = [
@@ -13,6 +13,10 @@ const ASSETS = [
   './data/b1_b2.js',
   './img/icon-192.png',
   './img/icon-512.png',
+  './img/bg_a1.png',
+  './img/bg_a2.png',
+  './img/bg_b1.png',
+  './img/bg_b2.png',
   // Google Fonts (cached at runtime below)
 ];
 
