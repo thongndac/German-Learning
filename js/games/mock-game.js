@@ -88,9 +88,20 @@ export function setupGameHandlers(navigate) {
   document.getElementById('btn-speak')?.addEventListener('click', () => {
     const q = QUESTIONS[currentQ];
     if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Cancel any ongoing speech to prevent queuing
       const utter = new SpeechSynthesisUtterance(q.german);
       utter.lang = 'de-DE';
-      speechSynthesis.speak(utter);
+      utter.rate = 0.85; // Slightly slower for language learners
+      
+      // Try to find a high-quality German voice (e.g., Google's)
+      const voices = window.speechSynthesis.getVoices();
+      const germanVoice = voices.find(v => v.lang.startsWith('de') && (v.name.includes('Google') || v.name.includes('Premium'))) 
+                       || voices.find(v => v.lang.startsWith('de'));
+      if (germanVoice) {
+        utter.voice = germanVoice;
+      }
+      
+      window.speechSynthesis.speak(utter);
     }
   });
 
