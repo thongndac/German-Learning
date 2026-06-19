@@ -163,7 +163,7 @@ function playSound(type) {
 // Global click listener for UI 'pop' sound
 document.addEventListener('click', (e) => {
   const t = e.target.closest('button, .nav-item, .cat-item, .feat-card, .map-node');
-  if (t && !t.classList.contains('choice-btn')) {
+  if (t && !t.classList.contains('choice-btn') && t.id !== 'btn-mic') {
     playSound('pop');
   }
 });
@@ -783,15 +783,17 @@ if ('speechSynthesis' in window) {
   speechSynthesis.onvoiceschanged = () => { _cachedVoice = null; };
 }
 
+let _isSpeakingActive = false;
 function startSpeaking(targetWord) {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRec) return;
-  playSound('pop');
+  if (!SpeechRec || _isSpeakingActive) return;
+  
+  _isSpeakingActive = true;
   const btn = document.getElementById('btn-mic');
   const res = document.getElementById('speech-result');
   btn.style.transform = 'scale(1.1)';
   btn.style.boxShadow = '0 0 0 6px rgba(124,58,237,0.3)';
-  res.innerText = 'Listening...';
+  res.innerText = 'Đang nghe...';
 
   const rec = new SpeechRec();
   rec.lang = 'de-DE';
@@ -799,6 +801,7 @@ function startSpeaking(targetWord) {
   rec.maxAlternatives = 1;
 
   rec.onresult = (e) => {
+    _isSpeakingActive = false;
     const transcript = e.results[0][0].transcript.trim().toLowerCase();
     const target = targetWord.trim().toLowerCase().replace(/[.,!?;:]/g, '');
     const cleanTrans = transcript.replace(/[.,!?;:]/g, '');
@@ -819,6 +822,7 @@ function startSpeaking(targetWord) {
   };
 
   rec.onerror = (e) => {
+    _isSpeakingActive = false;
     console.error('SpeechRecognition error:', e.error);
     if (e.error === 'not-allowed') {
       res.innerText = 'Vui lòng cấp quyền Microphone!';
@@ -832,6 +836,7 @@ function startSpeaking(targetWord) {
   };
 
   rec.onend = () => {
+    _isSpeakingActive = false;
     btn.style.transform = 'scale(1)';
     btn.style.boxShadow = '0 8px 24px rgba(124,58,237,0.3)';
   };
