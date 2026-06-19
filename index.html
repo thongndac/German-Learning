@@ -388,11 +388,15 @@ function mapHTML() {
   const mapHeight = all.length * nodeHeight + paddingBottom + paddingTop;
 
   // Background Scenery Layers
-  // A1 (0-9), A2 (10-19), B1 (20-29), B2 (30-39)
-  const a1H = 10 * nodeHeight + paddingBottom + 50;
-  const a2H = 10 * nodeHeight + 100;
-  const b1H = 10 * nodeHeight + 100;
-  const b2H = 10 * nodeHeight + paddingTop + 50;
+  const lenA1 = window.LEVEL_A1 ? window.LEVEL_A1.lessons.length : 24;
+  const lenA2 = window.LEVEL_A2 ? window.LEVEL_A2.lessons.length : 24;
+  const lenB1 = window.LEVEL_B1 ? window.LEVEL_B1.lessons.length : 8;
+  const lenB2 = window.LEVEL_B2 ? window.LEVEL_B2.lessons.length : 8;
+
+  const a1H = lenA1 * nodeHeight + paddingBottom + 50;
+  const a2H = lenA2 * nodeHeight + 100;
+  const b1H = lenB1 * nodeHeight + 100;
+  const b2H = lenB2 * nodeHeight + paddingTop + 50;
 
   const bgHtml = `
     <!-- A1: Green Valley -->
@@ -401,17 +405,17 @@ function mapHTML() {
     </div>
     
     <!-- A2: Golden Desert -->
-    <div style="position:absolute; bottom:${10 * nodeHeight + paddingBottom - 50}px; left:0; width:100%; height:${a2H}px; background:url('img/bg_a2.png') bottom center/cover no-repeat; z-index:1; mask-image:linear-gradient(to bottom, black 85%, transparent); -webkit-mask-image:linear-gradient(to bottom, black 85%, transparent);">
+    <div style="position:absolute; bottom:${lenA1 * nodeHeight + paddingBottom - 50}px; left:0; width:100%; height:${a2H}px; background:url('img/bg_a2.png') bottom center/cover no-repeat; z-index:1; mask-image:linear-gradient(to bottom, black 85%, transparent); -webkit-mask-image:linear-gradient(to bottom, black 85%, transparent);">
       <div style="position:absolute; bottom:50px; right:20px; font-size:2.5rem; font-weight:900; color:white; text-shadow:0 4px 10px rgba(0,0,0,0.5), 0 0 20px #F59E0B; opacity:0.8; text-align:right; line-height:1;">A2<br><span style="font-size:1.2rem;">Elementary</span></div>
     </div>
     
     <!-- B1: Snowy Mountain -->
-    <div style="position:absolute; bottom:${20 * nodeHeight + paddingBottom - 50}px; left:0; width:100%; height:${b1H}px; background:url('img/bg_b1.png') bottom center/cover no-repeat; z-index:2; mask-image:linear-gradient(to bottom, black 85%, transparent); -webkit-mask-image:linear-gradient(to bottom, black 85%, transparent);">
+    <div style="position:absolute; bottom:${(lenA1 + lenA2) * nodeHeight + paddingBottom - 50}px; left:0; width:100%; height:${b1H}px; background:url('img/bg_b1.png') bottom center/cover no-repeat; z-index:2; mask-image:linear-gradient(to bottom, black 85%, transparent); -webkit-mask-image:linear-gradient(to bottom, black 85%, transparent);">
       <div style="position:absolute; bottom:50px; left:20px; font-size:2.5rem; font-weight:900; color:white; text-shadow:0 4px 10px rgba(0,0,0,0.5), 0 0 20px #3B82F6; opacity:0.8; line-height:1;">B1<br><span style="font-size:1.2rem;">Intermediate</span></div>
     </div>
     
     <!-- B2: Magic Castle -->
-    <div style="position:absolute; bottom:${30 * nodeHeight + paddingBottom - 50}px; left:0; width:100%; height:${b2H}px; background:url('img/bg_b2.png') bottom center/cover no-repeat; z-index:3; mask-image:linear-gradient(to bottom, black 85%, transparent); -webkit-mask-image:linear-gradient(to bottom, black 85%, transparent);">
+    <div style="position:absolute; bottom:${(lenA1 + lenA2 + lenB1) * nodeHeight + paddingBottom - 50}px; left:0; width:100%; height:${b2H}px; background:url('img/bg_b2.png') bottom center/cover no-repeat; z-index:3; mask-image:linear-gradient(to bottom, black 85%, transparent); -webkit-mask-image:linear-gradient(to bottom, black 85%, transparent);">
       <div style="position:absolute; bottom:50px; right:20px; font-size:2.5rem; font-weight:900; color:white; text-shadow:0 4px 10px rgba(0,0,0,0.5), 0 0 20px #8B5CF6; opacity:0.8; text-align:right; line-height:1;">B2<br><span style="font-size:1.2rem;">Advanced</span></div>
     </div>
   `;
