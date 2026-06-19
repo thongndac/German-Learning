@@ -685,8 +685,7 @@ function renderQ() {
   const pct  = Math.round((curQ/activeQuestions.length)*100);
   const sessionPct = curQ > 0 ? Math.round(quizScore/(curQ*100)*100) : 100;
   const shuffled = [...q.choices].sort(()=>Math.random()-.5);
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  q.isSpeaking = (Math.random() < 0.25 && !!SpeechRec);
+  q.isSpeaking = false; // Feature disabled by user
   main.innerHTML = `
   <div style="display:flex;flex-direction:column;min-height:100vh;padding:20px;background:var(--bg);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
