@@ -33,6 +33,17 @@ export function renderHome(navigate) {
       </div>
 
       <div class="home-body">
+        
+        <!-- Mascot Welcome -->
+        <div class="mascot-welcome" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg, #F3F0FF, #E0E7FF);padding:16px;border-radius:24px;margin-bottom:20px;box-shadow:0 8px 24px rgba(124,58,237,0.1);">
+          <img src="img/mascot.png" style="width:80px;height:80px;object-fit:contain;animation:float 3s ease-in-out infinite;" alt="Luna">
+          <div style="background:white;padding:12px 16px;border-radius:16px;border-top-left-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,0.05);position:relative;flex:1;">
+            <div style="font-weight:800;color:var(--purple);margin-bottom:4px;">Luna</div>
+            <div style="font-size:0.9rem;color:var(--text);font-weight:700;">Hallo! Lass uns heute Deutsch lernen! 🇩🇪</div>
+            <div style="position:absolute;left:-8px;top:0;width:0;height:0;border-top:12px solid white;border-left:12px solid transparent;"></div>
+          </div>
+        </div>
+
         <div class="xp-card">
           <div class="xp-card-trophy">🏆</div>
           <div class="xp-card-title">Level ${state.level}</div>

@@ -29,6 +29,7 @@ export function showCompletePopup(score, target, stars, navigate) {
         <span class="complete-star mid">⭐</span>
         <span class="complete-star" style="${starCount<3?'filter:grayscale(1)':''}">⭐</span>
       </div>
+      <img src="img/mascot.png" style="width:120px;height:120px;margin: -20px auto 10px auto;display:block;animation:bounce 1s infinite alternate;" alt="Luna">
       <div class="complete-level">level 1</div>
       <div class="complete-banner">Complete!</div>
       <div class="complete-stats">

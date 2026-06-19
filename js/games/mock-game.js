@@ -58,9 +58,13 @@ function renderQuestion() {
         `).join('')}
       </div>
 
-      <!-- Avatar -->
-      <div style="text-align:center;margin-top:auto;padding-top:24px;" id="game-avatar">
-        <span style="font-size:3.5rem;display:inline-block;animation:breathe 3s ease-in-out infinite;">😊</span>
+      <!-- Mascot -->
+      <div style="display:flex;align-items:flex-end;gap:12px;margin-top:auto;padding-top:24px;" id="game-mascot-container">
+        <img src="img/mascot.png" id="game-mascot-img" style="width:80px;height:80px;object-fit:contain;animation:breathe 3s ease-in-out infinite;" alt="Luna">
+        <div id="game-mascot-bubble" style="background:white;padding:10px 16px;border-radius:16px;border-bottom-left-radius:0;box-shadow:0 4px 12px rgba(0,0,0,0.08);font-weight:800;color:var(--purple);font-size:1rem;opacity:0;transform:translateY(10px);transition:all 0.3s;position:relative;">
+          <span id="bubble-text"></span>
+          <div style="position:absolute;left:-8px;bottom:0;width:0;height:0;border-bottom:12px solid white;border-left:12px solid transparent;"></div>
+        </div>
       </div>
     </div>
   `;
@@ -87,7 +91,9 @@ export function setupGameHandlers(navigate) {
 function handleAnswer(e) {
   const btn = e.currentTarget;
   const correct = btn.dataset.correct === 'true';
-  const avatar = document.getElementById('game-avatar');
+  const mascotImg = document.getElementById('game-mascot-img');
+  const bubble = document.getElementById('game-mascot-bubble');
+  const bubbleText = document.getElementById('bubble-text');
 
   document.querySelectorAll('.choice-btn').forEach(b => {
     b.removeEventListener('click', handleAnswer);
@@ -103,17 +109,23 @@ function handleAnswer(e) {
     score += 100;
     btn.style.background = '#D1FAE5';
     btn.style.borderColor = '#10B981';
-    if (avatar) avatar.innerHTML = '<span style="font-size:3.5rem;display:inline-block;animation:bounce 0.6s infinite alternate;">🥳</span>';
-    setTimeout(nextQuestion, 1000);
+    if (mascotImg) mascotImg.style.animation = 'bounce 0.6s infinite alternate';
+    if (bubbleText) bubbleText.innerText = 'Toll! 🥳';
+    if (bubble) { bubble.style.opacity = '1'; bubble.style.transform = 'translateY(0)'; }
+    setTimeout(nextQuestion, 1500);
   } else {
     btn.style.background = '#FEE2E2';
     btn.style.borderColor = '#EF4444';
     btn.style.color = '#991B1B';
-    if (avatar) avatar.innerHTML = '<span style="font-size:3.5rem;display:inline-block;animation:droop 1s ease-in-out infinite;">😢</span>';
+    if (mascotImg) mascotImg.style.animation = 'droop 1s ease-in-out infinite';
+    if (bubbleText) bubbleText.innerText = 'Versuch\'s nochmal! 😢';
+    if (bubble) { bubble.style.opacity = '1'; bubble.style.transform = 'translateY(0)'; }
+    
     setTimeout(() => {
-      if (avatar) avatar.innerHTML = '<span style="font-size:3.5rem;display:inline-block;animation:breathe 3s ease-in-out infinite;">😊</span>';
-    }, 1500);
-    setTimeout(nextQuestion, 1800);
+      if (mascotImg) mascotImg.style.animation = 'breathe 3s ease-in-out infinite';
+      if (bubble) { bubble.style.opacity = '0'; bubble.style.transform = 'translateY(10px)'; }
+    }, 2000);
+    setTimeout(nextQuestion, 2300);
   }
 }
 
