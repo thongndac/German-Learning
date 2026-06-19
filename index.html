@@ -47,6 +47,7 @@ const state = {
   lastDay:    localStorage.getItem('lastDay') || '',
   completedLessons: JSON.parse(localStorage.getItem('completedLessons') || '[]'),
   lessonScores:     JSON.parse(localStorage.getItem('lessonScores')     || '{}'),
+  reviewWords:      JSON.parse(localStorage.getItem('reviewWords')      || '[]'),
 };
 
 function saveState() {
@@ -58,6 +59,7 @@ function saveState() {
   localStorage.setItem('lastDay',          state.lastDay);
   localStorage.setItem('completedLessons', JSON.stringify(state.completedLessons));
   localStorage.setItem('lessonScores',     JSON.stringify(state.lessonScores));
+  localStorage.setItem('reviewWords',      JSON.stringify(state.reviewWords));
 }
 
 function addStars(n) {
@@ -111,6 +113,61 @@ function getAllLessons() {
   return data.levels.flatMap(l => l.lessons);
 }
 
+// ── AUDIO MANAGER (Web Audio API) ──────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSound(type) {
+  try {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+    if (type === 'pop') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+      gainNode.gain.setValueAtTime(0.3, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'correct') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now); // C5
+      osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+      osc.frequency.setValueAtTime(1046.50, now + 0.2); // C6
+      gainNode.gain.setValueAtTime(0.3, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
+      osc.start(now);
+      osc.stop(now + 0.5);
+    } else if (type === 'wrong') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+      gainNode.gain.setValueAtTime(0.3, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+  } catch (e) { console.warn('Audio play failed', e); }
+}
+
+// Global click listener for UI 'pop' sound
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button, .nav-item, .cat-item, .feat-card, .map-node');
+  if (t && !t.classList.contains('choice-btn')) {
+    playSound('pop');
+  }
+});
+
 // ── ROUTER ─────────────────────────────────────────────
 function navigate(route) {
   const main = document.getElementById('main-content');
@@ -136,6 +193,7 @@ function navigate(route) {
     case 'stories':         main.innerHTML = storiesHTML();      storiesHandlers();      break;
     case 'discover':        main.innerHTML = discoverHTML();     discoverHandlers();     break;
     case 'activities':      main.innerHTML = activitiesHTML();   activitiesHandlers();   break;
+    case 'review':          main.innerHTML = reviewHTML();       reviewHandlers();       break;
     default:                navigate('home');
   }
 }
@@ -214,7 +272,7 @@ function homeHTML() {
     {icon:'🎮', label:'Games',      route:'games'},
     {icon:'📖', label:'Stories',    route:'stories'},
     {icon:'🎨', label:'Activities', route:'activities'},
-    {icon:'🔭', label:'Discover',   route:'discover'},
+    {icon:'🧠', label:'Review',     route:'review'},
   ];
   const feats = [
     {icon:'📚', title:'Lessons',    desc:'Vocabulary & grammar from A1 to B2.',       route:'lesson-list', border:'#818CF8', bg:'#EDE9FE'},
@@ -627,6 +685,8 @@ function renderQ() {
   const pct  = Math.round((curQ/activeQuestions.length)*100);
   const sessionPct = curQ > 0 ? Math.round(quizScore/(curQ*100)*100) : 100;
   const shuffled = [...q.choices].sort(()=>Math.random()-.5);
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  q.isSpeaking = (Math.random() < 0.25 && !!SpeechRec);
   main.innerHTML = `
   <div style="display:flex;flex-direction:column;min-height:100vh;padding:20px;background:var(--bg);">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
@@ -644,15 +704,23 @@ function renderQ() {
       <button onclick="speak('${q.german.replace(/'/g,"\\'")}')"
         style="margin-top:16px;background:#F3F0FF;border:none;border-radius:50%;width:54px;height:54px;font-size:1.5rem;cursor:pointer;">🔊</button>
     </div>
-    <p style="text-align:center;font-weight:800;color:var(--dim);margin-bottom:14px;">Pick the correct answer:</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="choices">
-      ${shuffled.map(c=>`
-        <button class="choice-btn" data-correct="${c===q.german}" data-word="${q.german}"
-          onclick="handleAnswer(this)"
-          style="background:white;border:3px solid #E9E5FF;border-radius:20px;padding:16px 10px;
-                 font-family:var(--font);font-size:1rem;font-weight:800;color:var(--text);
-                 cursor:pointer;box-shadow:0 4px 0 #E9E5FF;">${c}</button>`).join('')}
-    </div>
+    ${q.isSpeaking ? `
+      <p style="text-align:center;font-weight:800;color:var(--dim);margin-bottom:14px;">Tippe aufs Mikrofon und sprich:</p>
+      <div style="text-align:center;">
+        <button id="btn-mic" onclick="startSpeaking('${q.german.replace(/'/g,"\\'")}')" style="background:var(--purple);color:white;border:none;border-radius:50%;width:80px;height:80px;font-size:2.5rem;cursor:pointer;box-shadow:0 8px 24px rgba(124,58,237,0.3);transition:all 0.3s;display:flex;align-items:center;justify-content:center;margin:0 auto;">🎤</button>
+        <div id="speech-result" style="margin-top:16px;font-weight:700;color:var(--purple);font-size:1.1rem;min-height:30px;"></div>
+      </div>
+    ` : `
+      <p style="text-align:center;font-weight:800;color:var(--dim);margin-bottom:14px;">Pick the correct answer:</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="choices">
+        ${shuffled.map(c=>`
+          <button class="choice-btn" data-correct="${c===q.german}" data-word="${q.german}"
+            onclick="handleAnswer(this)"
+            style="background:white;border:3px solid #E9E5FF;border-radius:20px;padding:16px 10px;
+                   font-family:var(--font);font-size:1rem;font-weight:800;color:var(--text);
+                   cursor:pointer;box-shadow:0 4px 0 #E9E5FF;">${c}</button>`).join('')}
+      </div>
+    `}
     <!-- Luna Mascot -->
     <div style="display:flex;align-items:flex-end;gap:12px;margin-top:auto;padding-top:20px;" id="quiz-mascot">
       <div style="width:64px;height:64px;border-radius:50%;padding:3px;background:white;box-shadow:0 4px 12px rgba(124,58,237,0.15);flex-shrink:0;" id="quiz-mascot-frame">
@@ -715,6 +783,54 @@ if ('speechSynthesis' in window) {
   speechSynthesis.onvoiceschanged = () => { _cachedVoice = null; };
 }
 
+function startSpeaking(targetWord) {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) return;
+  playSound('pop');
+  const btn = document.getElementById('btn-mic');
+  const res = document.getElementById('speech-result');
+  btn.style.transform = 'scale(1.1)';
+  btn.style.boxShadow = '0 0 0 6px rgba(124,58,237,0.3)';
+  res.innerText = 'Listening...';
+
+  const rec = new SpeechRec();
+  rec.lang = 'de-DE';
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  rec.onresult = (e) => {
+    const transcript = e.results[0][0].transcript.trim().toLowerCase();
+    const target = targetWord.trim().toLowerCase().replace(/[.,!?;:]/g, '');
+    const cleanTrans = transcript.replace(/[.,!?;:]/g, '');
+    res.innerText = `You said: "${transcript}"`;
+    
+    const isCorrect = cleanTrans.includes(target) || (target.includes(cleanTrans) && cleanTrans.length > 2);
+
+    const dummyBtn = document.createElement('button');
+    dummyBtn.dataset.correct = isCorrect ? 'true' : 'false';
+    if (isCorrect) {
+      btn.style.background = '#10B981';
+      btn.innerText = '✅';
+    } else {
+      btn.style.background = '#EF4444';
+      btn.innerText = '❌';
+    }
+    handleAnswer(dummyBtn);
+  };
+
+  rec.onerror = (e) => {
+    res.innerText = 'Microphone error. Try again.';
+    btn.style.transform = 'scale(1)';
+    btn.style.boxShadow = '0 8px 24px rgba(124,58,237,0.3)';
+  };
+
+  rec.onend = () => {
+    btn.style.transform = 'scale(1)';
+    btn.style.boxShadow = '0 8px 24px rgba(124,58,237,0.3)';
+  };
+
+  rec.start();
+}
 
 function handleAnswer(btn) {
   const correct = btn.dataset.correct === 'true';
@@ -726,6 +842,7 @@ function handleAnswer(btn) {
   const bubble = document.getElementById('quiz-mascot-bubble');
   const bubbleText = document.getElementById('quiz-bubble-text');
   if (correct) {
+    playSound('correct');
     quizScore += 100;
     btn.style.background='#D1FAE5'; btn.style.borderColor='#10B981';
     btn.classList.add('answer-correct');
@@ -734,6 +851,7 @@ function handleAnswer(btn) {
     if (bubble) { bubble.style.opacity='1'; bubble.style.transform='translateY(0)'; bubble.style.background='#D1FAE5'; bubble.style.color='#065F46'; }
     setTimeout(nextQ, 1200);
   } else {
+    playSound('wrong');
     btn.style.background='#FEE2E2'; btn.style.borderColor='#EF4444';
     btn.classList.add('answer-wrong');
     if (mascotImg) mascotImg.style.animation = 'droop 1s ease-in-out infinite';
@@ -742,6 +860,10 @@ function handleAnswer(btn) {
     // Track wrong answers for review
     const q = activeQuestions[curQ];
     if (q && !wrongAnswers.find(w=>w.german===q.german)) wrongAnswers.push(q);
+    if (q && !state.reviewWords.find(w=>w.german===q.german)) {
+      state.reviewWords.push(q);
+      saveState();
+    }
     setTimeout(() => {
       if (mascotImg) mascotImg.style.animation = 'breathe 3s ease-in-out infinite';
       if (bubble) { bubble.style.opacity='0'; bubble.style.transform='translateY(8px)'; bubble.style.background='white'; bubble.style.color='var(--purple)'; }
@@ -1414,6 +1536,105 @@ function activitiesHandlers() {
       setTimeout(() => { [lBtn,rBtn].forEach(b=>{b.style.borderColor='#E9E5FF';b.style.background='white';}); }, 800);
     }
     selLeft = null; selRight = null;
+  }
+}
+
+// ── REVIEW FLASHCARDS ──────────────────────────────────
+let curReviewIdx = 0;
+
+function reviewHTML() {
+  if (state.reviewWords.length === 0) {
+    return `
+      <div class="lesson-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;">
+        <div style="font-size:5rem;margin-bottom:20px;">🎉</div>
+        <h2 style="font-weight:900;color:var(--purple);margin-bottom:10px;">All caught up!</h2>
+        <p style="color:var(--dim);margin-bottom:30px;font-weight:700;">You don't have any words to review right now.</p>
+        <button onclick="navigate('home')" style="background:var(--purple);color:white;border:none;padding:16px 32px;border-radius:24px;font-size:1.1rem;font-weight:900;cursor:pointer;">Go Home</button>
+      </div>
+    `;
+  }
+
+  const q = state.reviewWords[curReviewIdx];
+  const progress = Math.round(((curReviewIdx) / state.reviewWords.length) * 100);
+
+  return `
+  <div style="display:flex;flex-direction:column;min-height:100vh;padding:24px 20px;background:linear-gradient(135deg, #FDF4FF 0%, #F3E8FF 100%);">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px;">
+      <button id="btn-back-review" style="background:white;border:none;width:44px;height:44px;border-radius:14px;font-size:1.4rem;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;color:var(--text);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      <div style="flex:1;height:16px;background:rgba(255,255,255,0.6);border-radius:8px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);">
+        <div style="height:100%;background:linear-gradient(90deg, #D946EF, #A855F7);width:${progress}%;border-radius:8px;transition:width 0.6s;"></div>
+      </div>
+      <div style="font-size:1rem;font-weight:900;color:var(--purple);background:white;padding:6px 14px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);">${curReviewIdx + 1}/${state.reviewWords.length}</div>
+    </div>
+
+    <!-- Flashcard -->
+    <div class="flashcard-container" id="flashcard-container">
+      <div class="flashcard" id="flashcard">
+        <div class="flashcard-front">
+          <div style="font-size:6rem;margin-bottom:20px;animation:float 4s infinite;">${q.emoji}</div>
+          <h2 style="font-size:3rem;font-weight:900;color:var(--purple);margin-bottom:12px;">${q.german}</h2>
+          <p style="color:var(--dim);font-weight:700;margin-bottom:20px;">Tap to reveal</p>
+          <button onclick="event.stopPropagation(); speak('${q.german.replace(/'/g,"\\'")}')" style="background:#F3F0FF;border:none;border-radius:50%;width:64px;height:64px;font-size:1.8rem;cursor:pointer;box-shadow:0 4px 12px rgba(124,58,237,0.1);">🔊</button>
+        </div>
+        <div class="flashcard-back">
+          <div style="font-size:3rem;margin-bottom:20px;">${q.emoji}</div>
+          <h2 style="font-size:2.4rem;font-weight:900;color:var(--text);margin-bottom:12px;">${q.english || q.viet || 'Nghĩa của từ'}</h2>
+          <h3 style="font-size:1.4rem;color:#10B981;font-weight:800;margin-top:20px;">${q.german}</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions (hidden until flipped) -->
+    <div id="flashcard-actions" style="display:flex;gap:16px;margin-top:40px;opacity:0;pointer-events:none;transition:opacity 0.3s;">
+      <button id="btn-review-keep" style="flex:1;background:white;color:#EF4444;border:none;padding:20px;border-radius:24px;font-size:1.1rem;font-weight:900;cursor:pointer;box-shadow:0 8px 24px rgba(239,68,68,0.15);">Still Learning</button>
+      <button id="btn-review-gotit" style="flex:1;background:linear-gradient(135deg, #10B981, #059669);color:white;border:none;padding:20px;border-radius:24px;font-size:1.1rem;font-weight:900;cursor:pointer;box-shadow:0 8px 24px rgba(16,185,129,0.3);">Got it!</button>
+    </div>
+  </div>`;
+}
+
+function reviewHandlers() {
+  if (state.reviewWords.length === 0) return;
+
+  document.getElementById('btn-back-review')?.addEventListener('click', () => {
+    curReviewIdx = 0;
+    navigate('home');
+  });
+
+  const fc = document.getElementById('flashcard');
+  const acts = document.getElementById('flashcard-actions');
+  let isFlipped = false;
+
+  document.getElementById('flashcard-container')?.addEventListener('click', () => {
+    if (!isFlipped) {
+      playSound('pop');
+      fc.classList.add('flipped');
+      isFlipped = true;
+      acts.style.opacity = '1';
+      acts.style.pointerEvents = 'auto';
+    }
+  });
+
+  document.getElementById('btn-review-keep')?.addEventListener('click', () => {
+    playSound('wrong');
+    curReviewIdx++;
+    nextReviewCard();
+  });
+
+  document.getElementById('btn-review-gotit')?.addEventListener('click', () => {
+    playSound('correct');
+    state.reviewWords.splice(curReviewIdx, 1);
+    saveState();
+    nextReviewCard();
+  });
+
+  function nextReviewCard() {
+    if (curReviewIdx >= state.reviewWords.length) {
+      curReviewIdx = 0;
+      navigate('review'); // reload empty state
+    } else {
+      document.getElementById('main-content').innerHTML = reviewHTML();
+      reviewHandlers();
+    }
   }
 }
 
