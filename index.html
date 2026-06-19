@@ -819,7 +819,14 @@ function startSpeaking(targetWord) {
   };
 
   rec.onerror = (e) => {
-    res.innerText = 'Microphone error. Try again.';
+    console.error('SpeechRecognition error:', e.error);
+    if (e.error === 'not-allowed') {
+      res.innerText = 'Vui lòng cấp quyền Microphone!';
+    } else if (e.error === 'no-speech') {
+      res.innerText = 'Không nghe thấy gì. Thử lại nhé!';
+    } else {
+      res.innerText = 'Lỗi Micro: ' + e.error;
+    }
     btn.style.transform = 'scale(1)';
     btn.style.boxShadow = '0 8px 24px rgba(124,58,237,0.3)';
   };
